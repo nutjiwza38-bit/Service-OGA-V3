@@ -1,0 +1,3557 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGA Service Report - ใบงานบริการ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #1a56a0;
+    --blue-light: #e8f0fb;
+    --blue-mid: #2d6fc4;
+    --gray: #f5f5f5;
+    --border: #ccc;
+    --text: #1a1a1a;
+    --muted: #666;
+    --accent: #d32f2f;
+  }
+
+  body {
+    font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+    background: #e8eaf0;
+    min-height: 100vh;
+    color: var(--text);
+  }
+
+  /* ===== TOP NAV ===== */
+  .topbar {
+    background: var(--blue);
+    color: white;
+    padding: 12px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .logo-box {
+    width: 88px; height: 88px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .logo-box img { width: 88px; height: 88px; object-fit: contain; }
+  .topbar h1 { font-size: 17px; font-weight: 600; line-height: 1.2; }
+  .topbar h1 small { display: block; font-size: 12px; font-weight: 300; opacity: 0.85; }
+  .topbar-actions { display: flex; gap: 10px; }
+  .btn {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn-outline {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.25); }
+  .btn-white { background: white; color: var(--blue); }
+  .btn-white:hover { background: #f0f4ff; }
+  .btn-danger { background: var(--accent); color: white; }
+  .btn-danger:hover { background: #b71c1c; }
+
+  /* ===== MAIN LAYOUT ===== */
+  .app-wrapper { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+
+  .page-header {
+    background: white;
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid #dde3f0;
+  }
+  .page-header h2 { font-size: 20px; font-weight: 700; color: var(--blue); }
+  .page-header p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* ===== FORM CARD ===== */
+  .form-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #dde3f0;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .form-card-header {
+    background: var(--blue-light);
+    padding: 12px 24px;
+    border-bottom: 1px solid #c5d5ef;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .form-card-header h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .section-icon {
+    width: 26px; height: 26px;
+    background: var(--blue);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 13px;
+  }
+  .form-card-body { padding: 16px 24px; display: flex; flex-direction: column; gap: 8px; }
+
+  /* ===== FORM FIELDS ===== */
+  .form-grid { display: flex; flex-direction: column; gap: 8px; }
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; }
+
+  /* ===== HORIZONTAL FIELD LAYOUT ===== */
+  .field {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0;
+    background: #fff;
+    border: 1px solid #e0e8f5;
+    border-radius: 9px;
+    overflow: hidden;
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .field:focus-within {
+    border-color: var(--blue-mid);
+    box-shadow: 0 0 0 3px rgba(45,111,196,0.10);
+  }
+  .field label {
+    flex: 0 0 200px;
+    min-width: 160px;
+    max-width: 220px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    background: var(--blue-light);
+    padding: 10px 14px;
+    border-right: 1.5px solid #c5d5ef;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    word-break: break-word;
+  }
+  .field label span.th {
+    text-transform: none;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--blue);
+    display: block;
+    margin-bottom: 1px;
+  }
+  .field label .en-lbl {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--muted);
+    text-transform: none;
+  }
+  .field input, .field select, .field textarea {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 0;
+    color: var(--text);
+    background: transparent;
+    outline: none;
+    min-width: 0;
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.6;
+    padding-top: 10px;
+  }
+  /* Align label top for textarea */
+  .field:has(textarea) label {
+    align-self: stretch;
+    justify-content: flex-start;
+    padding-top: 12px;
+  }
+  /* Time input inside field */
+  .field input[type="time"] {
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+  /* Nested flex inside field (e.g. select + button) */
+  .field > div {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 4px;
+    min-width: 0;
+  }
+  .field > div > select {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    min-width: 0;
+  }
+  .field > div > select:focus {
+    border-color: var(--blue-mid);
+  }
+  .field > div > input {
+    flex: 1;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    background: #fafafa;
+    outline: none;
+    min-width: 0;
+  }
+
+  /* ===== CHECKBOX GROUP ===== */
+  .check-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+  .check-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+    background: #fafafa;
+    user-select: none;
+  }
+  .check-item:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+  .check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
+  .check-item.active { border-color: var(--blue); background: var(--blue-light); color: var(--blue); font-weight: 500; }
+
+  /* ===== RADIO SATISFACTION ===== */
+  .rating-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .rating-item {
+    flex: 1; min-width: 110px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    background: #fafafa;
+  }
+  .rating-item:hover { border-color: var(--blue-mid); }
+  .rating-item input { display: none; }
+  .rating-item.selected-4 { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; }
+  .rating-item.selected-3 { border-color: #1565c0; background: #e3f2fd; color: #0d47a1; }
+  .rating-item.selected-2 { border-color: #f57f17; background: #fff8e1; color: #e65100; }
+  .rating-item.selected-1 { border-color: #c62828; background: #ffebee; color: #b71c1c; }
+  .rating-num { font-size: 22px; font-weight: 700; display: block; }
+  .rating-th { font-size: 13px; font-weight: 500; }
+  .rating-en { font-size: 11px; opacity: 0.7; }
+
+  /* ===== CHARGE TYPE ===== */
+  .charge-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .charge-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+    background: #fafafa;
+    user-select: none;
+  }
+  .charge-item:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+  .charge-item input[type="radio"] { width: 15px; height: 15px; accent-color: var(--blue); cursor: pointer; }
+
+  /* ===== SIGNATURE ROW ===== */
+  .sig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .sig-box { border: 1.5px dashed var(--border); border-radius: 8px; padding: 16px; }
+  .sig-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 8px; text-transform: uppercase; }
+  .sig-line { border-bottom: 1.5px solid #aaa; height: 44px; }
+  .sig-fullname { font-size: 12px; color: var(--muted); text-align: center; margin-top: 4px; }
+
+  /* ===== TIME ROW ===== */
+  .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .time-field { display: flex; align-items: center; gap: 8px; }
+  .time-field label { font-size: 13px; font-weight: 600; color: var(--muted); min-width: 100px; }
+  .time-field input[type="time"] {
+    font-family: inherit; font-size: 14px;
+    padding: 7px 10px; border: 1.5px solid var(--border);
+    border-radius: 7px; background: #fafafa; color: var(--text);
+    outline: none;
+  }
+  .time-field input[type="time"]:focus { border-color: var(--blue-mid); }
+
+  /* ===== PRINT PREVIEW AREA ===== */
+  #print-area { display: none; }
+
+  /* ===== AUTH STYLES ===== */
+  .auth-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,30,60,0.82); z-index: 9999;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .auth-overlay.show { display: flex; }
+  .auth-box {
+    background: white; border-radius: 18px; padding: 40px 36px;
+    width: 90%; max-width: 400px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+    text-align: center;
+  }
+  .auth-logo { font-size: 38px; margin-bottom: 6px; }
+  .auth-title { font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
+  .auth-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .auth-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; text-align: left; border:none; border-radius:0; background:transparent; }
+  .auth-field:focus-within { box-shadow: none; border-color: transparent; }
+  .auth-field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; flex: unset; max-width: unset; background: transparent; border-right: none; padding: 0; }
+  .auth-field input {
+    font-family: inherit; font-size: 15px; padding: 10px 14px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    outline: none; transition: border-color 0.15s;
+  }
+  .auth-field input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(45,111,196,0.12); }
+  .auth-btn {
+    width: 100%; padding: 12px; border-radius: 9px; border: none;
+    background: var(--blue); color: white; font-family: inherit;
+    font-size: 16px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s; margin-top: 6px;
+  }
+  .auth-btn:hover { background: var(--blue-mid); }
+  .auth-err { color: #c62828; font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .auth-role { font-size: 12px; color: var(--muted); margin-top: 14px; }
+  /* User Manager Modal */
+  .um-overlay {
+    display: none; position: fixed; inset: 0; z-index: 8888;
+    background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+  }
+  .um-overlay.show { display: flex; }
+  .um-box {
+    background: white; border-radius: 16px; padding: 30px 28px;
+    width: 92%; max-width: 500px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 16px 60px rgba(0,0,0,0.25);
+  }
+  .um-title { font-size: 17px; font-weight: 700; color: var(--blue); margin-bottom: 16px; }
+  .um-user-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 9px;
+    border: 1px solid #e8eef8; margin-bottom: 8px;
+    background: #f8faff;
+  }
+  .um-user-info { flex: 1; }
+  .um-user-name { font-size: 14px; font-weight: 600; color: var(--blue); }
+  .um-user-role { font-size: 12px; color: var(--muted); }
+  .um-badge-admin { background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .um-badge-user { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .um-badge-disabled { background: #fce4ec; color: #c62828; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .um-divider { border: none; border-top: 1px solid #e8eef8; margin: 18px 0; }
+  .um-add-title { font-size: 14px; font-weight: 600; color: var(--blue); margin-bottom: 12px; }
+  .um-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .um-field { display: flex; flex-direction: column; gap: 4px; border: none; border-radius: 0; background: transparent; }
+  .um-field:focus-within { box-shadow: none; border-color: transparent; }
+  .um-field label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; flex: unset; max-width: unset; background: transparent; border-right: none; padding: 0; }
+  .um-field input, .um-field select {
+    font-family: inherit; font-size: 14px; padding: 8px 10px;
+    border: 1.5px solid #ccc; border-radius: 7px; outline: none;
+  }
+  .um-field input:focus, .um-field select:focus { border-color: var(--blue-mid); }
+  /* topbar user chip */
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 6px 12px; font-size: 13px; color: white;
+  }
+  .user-chip .chip-name { font-weight: 600; }
+  .user-chip .chip-role { font-size: 11px; opacity: 0.8; }
+
+  @media(max-width:700px){
+    .sh-summary-row{grid-template-columns:1fr 1fr !important;}
+  }
+
+  /* ===== DRAFT MANAGER ===== */
+  .draft-bar {
+    background: white;
+    border: 1px solid #dde3f0;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .draft-bar-header {
+    background: var(--blue-light);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #c5d5ef;
+    cursor: pointer;
+    user-select: none;
+  }
+  .draft-bar-header h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .draft-bar-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .draft-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1.5px solid #e0e8f5;
+    border-radius: 9px;
+    background: #fafcff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .draft-item.draft-active { border-color: var(--blue); background: var(--blue-light); box-shadow: 0 0 0 3px rgba(26,86,160,0.12); }
+  .draft-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--blue-light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .draft-info { flex: 1; min-width: 0; }
+  .draft-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .draft-meta { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .draft-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-editing { background: #e3f2fd; color: #1565c0; }
+  .badge-ready   { background: #e8f5e9; color: #2e7d32; }
+  .badge-draft   { background: #f5f5f5; color: #666; }
+  .draft-progress { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .draft-prog-bar { width: 60px; height: 4px; border-radius: 2px; background: #dde3f0; overflow: hidden; }
+  .draft-prog-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .draft-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .draft-btn {
+    font-family: inherit; font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 6px;
+    border: 1px solid var(--border); background: white; color: var(--text);
+    cursor: pointer; white-space: nowrap; transition: all 0.12s;
+  }
+  .draft-btn:hover { background: var(--blue-light); border-color: var(--blue-mid); color: var(--blue); }
+  .draft-btn-del { color: #c00; border-color: #fcc; background: #fff8f8; }
+  .draft-btn-del:hover { background: #fee; }
+  .draft-btn-blue { background: var(--blue); color: white; border-color: var(--blue); }
+  .draft-btn-blue:hover { background: var(--blue-mid); }
+  .draft-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 16px; }
+  .draft-autosave { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .draft-autosave.saved { color: #2e7d32; }
+  .draft-toggle-icon { font-size: 12px; transition: transform 0.2s; display: inline-block; }
+  .draft-toggle-icon.open { transform: rotate(180deg); }
+
+
+  /* ===== PRINT STYLES ===== */
+  @media print {
+    @page { size: A4; margin: 0; }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area img { visibility: visible !important; display: block !important; }
+    #print-area {
+      display: block !important;
+      position: absolute;
+      top: 0; left: 0;
+      width: 210mm;
+    }
+    .topbar, .app-wrapper { display: none !important; }
+    .print-doc {
+      page-break-after: avoid;
+      page-break-inside: avoid;
+    }
+  }
+
+  /* ===== PRINT DOCUMENT ===== */
+  .print-doc {
+    font-family: 'Sarabun', 'Noto Sans Thai', sans-serif;
+    font-size: 8.5pt;
+    padding: 0 8mm;
+    background: white;
+    color: #000;
+    width: 210mm;
+    height: 297mm;
+    max-height: 297mm;
+    overflow: hidden;
+    line-height: 1.25;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* --- HEADER --- */
+  .ph-wrap {
+    display: table;
+    width: 100%;
+    border-bottom: 2px solid #000;
+    padding-bottom: 1.5mm;
+    margin-bottom: 1.5mm;
+  }
+  .ph-left {
+    display: table-cell;
+    width: 68%;
+    vertical-align: top;
+  }
+  .ph-right {
+    display: table-cell;
+    width: 32%;
+    vertical-align: top;
+    text-align: right;
+  }
+  .ph-logo-row {
+    display: table;
+    width: 100%;
+  }
+  .ph-logo-cell {
+    display: table-cell;
+    vertical-align: middle;
+    width: 120px;
+    padding-right: 6px;
+  }
+  .print-logo {
+    width: 114px; height: 114px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .print-logo img { width: 114px; height: 114px; object-fit: contain; }
+  .ph-company-cell { display: table-cell; vertical-align: middle; }
+  .ph-company-cell .c1 { font-size: 11pt; font-weight: 700; line-height: 1.2; }
+  .ph-company-cell .c2 { font-size: 9.5pt; font-weight: 700; line-height: 1.2; }
+  .ph-company-cell .c3 { font-size: 6.5pt; line-height: 1.45; color: #222; margin-top: 1px; }
+  .ph-right .sr-title { font-size: 16pt; font-weight: 700; display: block; border-bottom: 2.5px solid #000; margin-bottom: 3px; padding-bottom: 1px; }
+  .ph-right .sr-no { font-size: 8.5pt; display: flex; align-items: flex-end; justify-content: flex-end; gap: 4px; }
+  .ph-right .sr-no .noline { display: inline-block; min-width: 118px; border-bottom: 1px solid #000; }
+
+  .lbl-th { font-size: 8.5pt; font-weight: 600; color: #000; display: block; line-height: 1.2; }
+  .lbl-en { font-size: 7.5pt; color: #444; display: block; line-height: 1.2; }
+
+  /* --- DATE BAR --- */
+  .p-datebar {
+    text-align: center;
+    font-size: 8.5pt;
+    margin: 1mm 0 1.5mm 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+  }
+  .p-datebar .dval { display: inline-block; min-width: 100px; border-bottom: 1px solid #000; margin-left: 4px; }
+
+  /* --- CUSTOMER SECTION (left/right split) --- */
+  .p-cust-wrap {
+    display: table;
+    width: 100%;
+    margin-bottom: 1mm;
+  }
+  .p-cust-left { display: table-cell; width: 55%; vertical-align: top; padding-right: 5mm; }
+  .p-cust-right { display: table-cell; width: 45%; vertical-align: top; }
+
+  /* --- INLINE FIELD (label above, underline below) --- */
+  .pf { margin-bottom: 1.5mm; }
+  .pf-lbl { font-size: 7pt; color: #333; display: block; margin-bottom: 0; }
+  .pf-lbl .th { font-size: 8pt; font-weight: 600; color: #000; }
+  .pf-val { display: block; border-bottom: 1px solid #666; min-height: 11px; font-size: 8.5pt; padding-bottom: 1px; padding-left: 2cm; word-break: break-word; }
+  .pf-val.wide { min-width: 100%; }
+
+  /* --- VISIT TYPE ROW --- */
+  .p-visit-row {
+    display: table;
+    width: 100%;
+    margin-bottom: 2mm;
+    font-size: 8.5pt;
+  }
+  .p-visit-lbl { display: table-cell; vertical-align: middle; white-space: nowrap; font-weight: 600; padding-right: 3mm; font-size: 8.5pt; }
+  .p-visit-opts { display: table-cell; vertical-align: middle; }
+  .p-visit-opts-inner { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .pchk {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 1px solid #000;
+    vertical-align: middle;
+    margin-right: 2px;
+    text-align: center;
+    line-height: 9px;
+    font-size: 7.5pt;
+    flex-shrink: 0;
+  }
+  .pchk.checked { background: #000; color: white; font-size: 6.5pt; }
+  .pchk.checked::after { content: '✓'; }
+  .p-visit-opt { display: flex; align-items: center; white-space: nowrap; }
+
+  /* --- ACTIVITY BOX --- */
+  .p-act-box {
+    border: 1px solid #000;
+    padding: 1.5mm 3mm 1.5mm 3mm;
+    margin-bottom: 1.5mm;
+  }
+  .p-act-title {
+    font-size: 9pt;
+    font-weight: 700;
+    margin-bottom: 1.5mm;
+    border-bottom: 1px solid #aaa;
+    padding-bottom: 0.5mm;
+  }
+  .p-act-title .th { font-size: 9pt; }
+  .p-act-title .en { font-size: 9.5pt; text-transform: uppercase; }
+
+  /* machine row inside activity */
+  .p-mrow { display: table; width: 100%; margin-bottom: 1.5mm; }
+  .p-mcell { display: table-cell; vertical-align: bottom; padding-right: 4mm; }
+  .p-mcell:last-child { padding-right: 0; }
+
+  /* --- CHARGE ROW --- */
+  .p-charge-row {
+    border: 1px solid #000;
+    border-top: none;
+    padding: 1mm 3mm;
+    display: flex;
+    gap: 0;
+    flex-wrap: wrap;
+    margin-bottom: 1.5mm;
+  }
+  .p-charge-cell {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 7.5pt;
+    flex: 1 1 auto;
+    min-width: 25%;
+    padding: 0.3mm 0;
+  }
+
+  /* --- SAT BOX --- */
+  .p-sat-box {
+    border: 1px solid #000;
+    padding: 1mm 3mm;
+    margin-bottom: 1.5mm;
+  }
+  .p-sat-q { font-size: 8pt; margin-bottom: 1mm; }
+  .p-sat-opts { display: flex; gap: 0; }
+  .p-sat-opt {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 8pt;
+    flex: 1;
+  }
+
+  /* --- SIGNATURES + TIME COMBINED --- */
+  .p-sig-time-row {
+    display: table;
+    width: 100%;
+    border: 1px solid #000;
+    margin-top: 1.5mm;
+  }
+  .p-sig-time-cell {
+    display: table-cell;
+    width: 25%;
+    vertical-align: top;
+    padding: 1.5mm 2mm;
+    border-right: 1px solid #000;
+  }
+  .p-sig-time-cell:last-child { border-right: none; }
+  .p-sig-lbl { font-size: 7.5pt; font-weight: 600; margin-bottom: 0.5mm; }
+  .p-sig-line { border-bottom: 1px solid #000; height: 18px; }
+  .p-sig-note { font-size: 6.5pt; color: #444; text-align: center; margin-top: 0.5mm; }
+  .p-time-inner { display: flex; align-items: flex-end; gap: 3px; font-size: 8pt; margin-top: 1.5mm; }
+  .p-time-val { display: inline-block; min-width: 38px; border-bottom: 1px solid #000; text-align: center; padding-bottom: 1px; }
+  .p-time-sep { font-size: 9pt; font-weight: 700; padding-bottom: 1px; }
+  .p-time-unit { font-size: 7.5pt; margin-left: 1mm; }
+
+  /* --- FOOTER --- */
+  .p-footer { text-align: left; font-size: 6.5pt; color: #555; margin-top: 2mm; border-top: 0.5px solid #bbb; padding-top: 1mm; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 700px) {
+    /* ===== MOBILE LAYOUT ===== */
+    .form-grid-2, .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
+    .sig-row, .time-row { grid-template-columns: 1fr; }
+
+    /* ===== TOPBAR MOBILE ===== */
+    .topbar {
+      padding: 8px 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .topbar-left { gap: 8px; }
+    .logo-box { width: 48px; height: 48px; }
+    .logo-box img { width: 48px; height: 48px; }
+    .topbar h1 { font-size: 13px; }
+    .topbar h1 small { font-size: 10px; }
+
+    /* ===== TOPBAR BUTTONS — แสดงข้อความเสมอ ===== */
+    .topbar-actions {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: flex-start;
+    }
+    .topbar-actions .btn {
+      padding: 7px 10px;
+      font-size: 12px;
+      gap: 4px;
+      flex: 1 1 auto;
+      justify-content: center;
+      min-width: 0;
+    }
+    /* ข้อความในปุ่มให้แสดงเสมอ ไม่ซ่อน */
+    .topbar-actions .btn span { display: inline !important; }
+
+    /* ===== FORM FIELDS MOBILE ===== */
+    .field { flex-direction: column; }
+    .field label {
+      flex: unset;
+      max-width: 100%;
+      min-width: unset;
+      border-right: none;
+      border-bottom: 1.5px solid #c5d5ef;
+      padding: 8px 14px 7px;
+    }
+    .field:has(textarea) label { align-self: unset; }
+
+    /* ===== APP WRAPPER MOBILE ===== */
+    .app-wrapper { padding: 12px 10px 60px; }
+
+    /* ===== PAGE HEADER MOBILE ===== */
+    .page-header { padding: 14px 16px; }
+    .page-header h2 { font-size: 16px; }
+
+    /* ===== FORM CARD MOBILE ===== */
+    .form-card-body { padding: 12px 14px; }
+    .form-card-header { padding: 10px 14px; }
+
+    /* ===== RATING GROUP MOBILE ===== */
+    .rating-item { min-width: 80px; }
+
+    /* ===== DRAFT BAR MOBILE ===== */
+    .draft-item { flex-wrap: wrap; }
+    .draft-actions { width: 100%; display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+
+    /* ===== USER CHIP MOBILE ===== */
+    .user-chip { font-size: 11px; padding: 5px 8px; }
+    .user-chip .chip-role { display: none; }
+  }
+
+  /* ===== PDF AI LOADING OVERLAY ===== */
+  .pdf-ai-overlay {
+    display: none; position: fixed; inset: 0; z-index: 10000;
+    background: rgba(15,30,60,0.88);
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+  .pdf-ai-overlay.show { display: flex; }
+  .pdf-ai-box {
+    background: white; border-radius: 20px;
+    padding: 36px 40px; text-align: center;
+    width: 90%; max-width: 380px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.35);
+  }
+  .pdf-ai-icon { font-size: 44px; margin-bottom: 10px; }
+  .pdf-ai-title { font-size: 18px; font-weight: 700; color: var(--blue); margin-bottom: 6px; }
+  .pdf-ai-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  .pdf-ai-progress {
+    height: 6px; background: #e8eef8; border-radius: 99px; overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .pdf-ai-bar {
+    height: 100%; width: 0%; background: var(--blue);
+    border-radius: 99px;
+    transition: width 0.4s ease;
+    animation: pdfBarAnim 2.5s ease-in-out infinite;
+  }
+  @keyframes pdfBarAnim {
+    0%   { width: 10%; }
+    50%  { width: 80%; }
+    100% { width: 95%; }
+  }
+  .pdf-ai-status { font-size: 12px; color: var(--muted); min-height: 18px; }
+</style>
+</head>
+<body>
+
+
+<!-- ===== PDF AI LOADING OVERLAY ===== -->
+<div class="pdf-ai-overlay" id="pdfAiOverlay">
+  <div class="pdf-ai-box">
+    <div class="pdf-ai-icon">🤖</div>
+    <div class="pdf-ai-title">AI กำลังอ่าน PDF</div>
+    <div class="pdf-ai-sub" id="pdfAiSub">กำลังส่ง PDF ไปยัง Claude AI<br>เพื่อดึงข้อมูลใบงาน...</div>
+    <div class="pdf-ai-progress"><div class="pdf-ai-bar" id="pdfAiBar"></div></div>
+    <div class="pdf-ai-status" id="pdfAiStatus">กรุณารอสักครู่...</div>
+  </div>
+</div>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div class="auth-overlay show" id="loginOverlay">
+  <div class="auth-box">
+    <div class="auth-logo">🔐</div>
+    <div class="auth-title">OGA Service Report</div>
+    <div class="auth-sub">กรุณาเข้าสู่ระบบก่อนใช้งาน</div>
+    <div class="auth-field">
+      <label>ชื่อผู้ใช้ / Username</label>
+      <input type="text" id="loginUser" placeholder="ชื่อผู้ใช้" autocomplete="username">
+    </div>
+    <div class="auth-field">
+      <label>รหัสผ่าน / Password</label>
+      <input type="password" id="loginPass" placeholder="รหัสผ่าน" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="auth-btn" onclick="doLogin()">🔓 เข้าสู่ระบบ</button>
+    <div class="auth-err" id="loginErr"></div>
+    <div class="auth-role" id="loginHint"></div>
+  </div>
+</div>
+
+
+<!-- ===== HISTORY LOCK OVERLAY ===== -->
+<div class="auth-overlay" id="historyLockOverlay">
+  <div class="auth-box">
+    <div class="auth-logo">📋</div>
+    <div class="auth-title">ประวัติใบงาน</div>
+    <div class="auth-sub">หน้านี้สำหรับ Admin เท่านั้น<br>กรุณายืนยันรหัสผ่าน Admin</div>
+    <div class="auth-field">
+      <label>รหัสผ่าน Admin</label>
+      <input type="password" id="historyPass" placeholder="รหัสผ่าน" onkeydown="if(event.key==='Enter')verifyHistoryLock()">
+    </div>
+    <button class="auth-btn" onclick="verifyHistoryLock()">✅ ยืนยัน</button>
+    <div class="auth-err" id="historyLockErr"></div>
+    <button onclick="hideHistoryLock()" style="margin-top:12px;background:none;border:none;font-family:inherit;font-size:13px;color:var(--muted);cursor:pointer;">← ยกเลิก</button>
+  </div>
+</div>
+
+<!-- ===== USER MANAGER MODAL ===== -->
+<div class="um-overlay" id="umOverlay" onclick="if(event.target===this)closeUserManager()">
+  <div class="um-box">
+    <div class="um-title">👤 จัดการผู้ใช้งาน (User Management)</div>
+    <div id="umUserList"></div>
+    <hr class="um-divider">
+    <div class="um-add-title">➕ เพิ่มผู้ใช้ใหม่</div>
+    <div class="um-grid" style="margin-bottom:10px;">
+      <div class="um-field">
+        <label>ชื่อผู้ใช้</label>
+        <input type="text" id="umNewUser" placeholder="username">
+      </div>
+      <div class="um-field">
+        <label>รหัสผ่าน</label>
+        <input type="password" id="umNewPass" placeholder="password">
+      </div>
+      <div class="um-field">
+        <label>ชื่อแสดง</label>
+        <input type="text" id="umNewDisplay" placeholder="ชื่อ-นามสกุล">
+      </div>
+      <div class="um-field">
+        <label>สิทธิ์</label>
+        <select id="umNewRole">
+          <option value="user">User (ทั่วไป)</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="addUser()" style="padding:9px 22px;background:var(--blue);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;">+ เพิ่ม</button>
+      <button onclick="closeUserManager()" style="padding:9px 22px;background:#eee;border:none;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;">ปิด</button>
+    </div>
+    <div id="umErr" style="color:#c62828;font-size:13px;margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- TOP NAV -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-box"><img src="data:image/png;base64,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" alt="OGA Logo"></div>
+    <h1>Service Report System <small>OGA International Co., Ltd.</small></h1>
+  </div>
+  <div class="topbar-actions">
+    <!-- ปุ่มอ่าน PDF ด้วย Claude AI — admin only -->
+    <button class="btn btn-white admin-only-btn" id="pdfReadBtn" onclick="document.getElementById('pdfUploadInput').click()" title="อัปโหลด PDF ใบงานเก่า แล้วให้ AI กรอกข้อมูลให้อัตโนมัติ" style="display:none;">
+      &#129302; <span>AI อ่าน PDF</span>
+    </button>
+    <input type="file" id="pdfUploadInput" accept=".pdf" style="display:none" onchange="handlePdfUpload(event)">
+    <!-- ล้างข้อมูล — admin only -->
+    <button class="btn btn-outline admin-only-btn" onclick="resetForm()" style="display:none;">
+      &#8635; <span>ล้างข้อมูล</span>
+    </button>
+    <!-- พิมพ์ — แสดงเสมอ -->
+    <button class="btn btn-white" onclick="printReport('print')">
+      &#128438; <span>สั่งพิมพ์</span>
+    </button>
+    <!-- บันทึก PDF — แสดงเสมอ -->
+    <button class="btn btn-outline" id="pdfBtn" onclick="printReport('pdf')">
+      &#128196; <span>บันทึก PDF</span>
+    </button>
+    <!-- บันทึกข้อมูล — แสดงเสมอ -->
+    <button class="btn btn-danger" id="saveBtn" onclick="saveToSheets()" title="บันทึกข้อมูลก่อนพิมพ์หรือบันทึก PDF">
+      &#128190; <span>บันทึกข้อมูล</span>
+    </button>
+    <!-- ประวัติ (Sheets) — admin only -->
+    <button class="btn btn-outline admin-only-btn" onclick="showSheetsHistory()" style="display:none;">
+      &#128203; <span>ประวัติ (Sheets)</span>
+    </button>
+    <!-- จัดการ Users — admin only -->
+    <button class="btn btn-outline admin-only-btn" id="btnUserMgr" onclick="openUserManager()" style="display:none;">
+      &#128100; <span>จัดการ Users</span>
+    </button>
+    <div class="user-chip" id="userChip" style="display:none;">
+      <span>👤</span>
+      <div>
+        <div class="chip-name" id="chipName">—</div>
+        <div class="chip-role" id="chipRole">—</div>
+      </div>
+      <button onclick="doLogout()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:white;border-radius:6px;padding:3px 8px;font-family:inherit;font-size:12px;cursor:pointer;margin-left:4px;">ออก</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT AREA (hidden until print) -->
+<div id="print-area"></div>
+
+<!-- ===== TECH MANAGER MODAL ===== -->
+<div id="techManagerModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:14px;padding:28px;width:90%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,0.25);">
+    <h3 style="font-size:16px;font-weight:700;color:var(--blue);margin-bottom:16px;">👷 จัดการรายชื่อช่าง</h3>
+    <div id="techList" style="margin-bottom:16px;max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="newTechInput" placeholder="ชื่อ-นามสกุลช่างใหม่" style="flex:1;font-family:inherit;font-size:14px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;outline:none;">
+      <button onclick="addTech()" style="padding:8px 18px;background:var(--blue);color:white;border:none;border-radius:7px;font-family:inherit;font-size:14px;cursor:pointer;">+ เพิ่ม</button>
+    </div>
+    <div style="text-align:right;margin-top:16px;">
+      <button onclick="closeTechManager()" style="padding:8px 22px;background:#eee;border:none;border-radius:7px;font-family:inherit;font-size:14px;cursor:pointer;">ปิด</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HISTORY PAGE ===== -->
+<div id="historyPage" style="display:none;" class="app-wrapper">
+  <div class="page-header">
+    <div>
+      <h2>📋 ประวัติการบันทึกงาน</h2>
+      <p>รายการใบงานที่บันทึกไว้ทั้งหมด — สามารถดึงข้อมูลเก่า Reprint ได้</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input type="text" id="histSearch" placeholder="🔍 ค้นหา ลูกค้า / ช่าง / เลขที่..." oninput="renderHistory()" style="font-family:inherit;font-size:14px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;width:260px;">
+      <button onclick="showPage('form')" style="padding:8px 18px;background:var(--blue);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;">+ ใบงานใหม่</button>
+    </div>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<!-- ===== SHEETS HISTORY PAGE ===== -->
+<div id="sheetsHistoryPage" style="display:none;" class="app-wrapper">
+  <div class="page-header">
+    <div>
+      <h2>📋 ประวัติใบงาน (Google Sheets)</h2>
+      <p>ดึงข้อมูลจาก Google Sheets — ค้นหา กรอง และพิมพ์ใบงานเก่าได้</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button onclick="shLoadData()" class="btn btn-outline" style="font-size:13px;padding:7px 14px;">&#8635; รีเฟรช</button>
+      <button onclick="showPage('form')" style="padding:8px 18px;background:var(--blue);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;">+ ใบงานใหม่</button>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div style="background:white;border-radius:12px;border:1px solid var(--border);padding:18px 24px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+    <div class="field">
+      <label><span class="th">มุมมอง</span></label>
+      <select id="shViewMode" onchange="shApplyFilter()">
+        <option value="all">ทั้งหมด</option>
+        <option value="day">วันนี้</option>
+        <option value="week">สัปดาห์นี้</option>
+        <option value="month">เดือนนี้</option>
+        <option value="year">ปีนี้</option>
+      </select>
+    </div>
+    <div class="field">
+      <label><span class="th">วันที่เริ่ม</span></label>
+      <input type="date" id="shDateFrom" onchange="shApplyFilter()">
+    </div>
+    <div class="field">
+      <label><span class="th">วันที่สิ้นสุด</span></label>
+      <input type="date" id="shDateTo" onchange="shApplyFilter()">
+    </div>
+    <div class="field">
+      <label><span class="th">ค้นหา</span></label>
+      <input type="text" id="shSearchQ" placeholder="ลูกค้า / เลขที่ / เครื่อง..." oninput="shApplyFilter()" style="min-width:200px;">
+    </div>
+    <button class="btn btn-outline" onclick="shClearFilter()" style="color:var(--blue);background:var(--blue-light);border-color:var(--blue-mid);">&#10005; ล้างตัวกรอง</button>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;" class="sh-summary-row">
+    <div class="form-card" style="border-radius:12px;padding:18px 20px;">
+      <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:6px;">ทั้งหมด</div>
+      <div style="font-size:28px;font-weight:700;color:var(--blue);" id="shSumTotal">—</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">ใบงาน</div>
+    </div>
+    <div class="form-card" style="border-radius:12px;padding:18px 20px;">
+      <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:6px;">ในช่วงที่เลือก</div>
+      <div style="font-size:28px;font-weight:700;color:var(--blue);" id="shSumFiltered">—</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">ใบงาน</div>
+    </div>
+    <div class="form-card" style="border-radius:12px;padding:18px 20px;">
+      <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:6px;">เรียกซ่อม</div>
+      <div style="font-size:28px;font-weight:700;color:var(--blue);" id="shSumService">—</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">ครั้ง</div>
+    </div>
+    <div class="form-card" style="border-radius:12px;padding:18px 20px;">
+      <div style="font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:6px;">ความพึงพอใจ ⭐</div>
+      <div style="font-size:28px;font-weight:700;color:var(--blue);" id="shSumRating">—</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">คะแนนเฉลี่ย</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="form-card" style="overflow:hidden;">
+    <div style="padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <h3 id="shTableTitle" style="font-size:16px;font-weight:700;color:var(--blue);">📋 รายการใบงาน</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" style="color:var(--blue);background:var(--blue-light);border-color:var(--blue-mid);font-size:13px;padding:6px 14px;" onclick="shExportCSV()">&#128229; Export CSV</button>
+      </div>
+    </div>
+    <div id="shTableBody">
+      <div style="text-align:center;padding:60px;color:var(--muted);font-size:15px;">
+        <div style="width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;"></div>
+        กำลังโหลดข้อมูล...
+      </div>
+    </div>
+    <div id="shPagination" style="display:none;padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- SHEETS DETAIL MODAL -->
+<div id="shModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;" onclick="shCloseModal(event)">
+  <div style="background:white;border-radius:14px;width:90%;max-width:680px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <h3 id="shModalTitle" style="font-size:17px;font-weight:700;color:var(--blue);">รายละเอียดใบงาน</h3>
+      <button style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;" onclick="document.getElementById('shModalOverlay').style.display='none'">&#10005;</button>
+    </div>
+    <div style="padding:20px 24px;" id="shModalBody"></div>
+    <div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+      <button class="btn btn-outline" style="color:#333;border-color:#ccc;" onclick="document.getElementById('shModalOverlay').style.display='none'">ปิด</button>
+      <button id="shModalDeleteBtn" class="btn btn-danger" style="display:none;" onclick="shDeleteFromModal()">🗑 ลบใบงานนี้</button>
+      <button class="btn btn-white" style="background:var(--blue-mid);color:white;" onclick="shPrintModal()">&#128438; พิมพ์ใบงานนี้</button>
+    </div>
+  </div>
+</div>
+
+
+    <button onclick="showPage('form')" style="padding:8px 18px;background:var(--blue);color:white;border:none;border-radius:8px;font-family:inherit;font-size:14px;cursor:pointer;align-self:center;">+ ใบงานใหม่</button>
+  </div>
+  <div id="statsContent"></div>
+</div>
+
+<!-- FORM APP -->
+<div class="app-wrapper">
+
+
+  <!-- ===== DRAFT MANAGER BAR ===== -->
+  <div class="draft-bar" id="draftBar">
+    <div class="draft-bar-header" onclick="toggleDraftBar()">
+      <h3>
+        📝 Draft ของฉัน
+        <span id="draftCount" style="background:var(--blue);color:white;font-size:11px;padding:1px 8px;border-radius:20px;font-weight:600;">0</span>
+      </h3>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="draft-autosave" id="draftAutoSaveLabel">&#128190; —</span>
+        <button onclick="event.stopPropagation();draftSaveNow()" class="draft-btn draft-btn-blue" style="font-size:12px;padding:5px 12px;">&#128190; บันทึก Draft</button>
+        <button onclick="event.stopPropagation();draftNewFromCustomer()" class="draft-btn" style="font-size:12px;padding:5px 12px;">&#43; คัดลอกลูกค้า→ใบใหม่</button>
+        <span class="draft-toggle-icon" id="draftToggleIcon">▼</span>
+      </div>
+    </div>
+    <div class="draft-bar-body" id="draftBarBody">
+      <div class="draft-empty" id="draftEmpty">ยังไม่มี Draft — กด <strong>บันทึก Draft</strong> เพื่อเก็บข้อมูลค้างไว้</div>
+      <div id="draftList"></div>
+    </div>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h2>&#128196; กรอกใบงานบริการ</h2>
+      <p>Service Report — FM-OGA/SV-001, Rev.04 &nbsp;|&nbsp; กรอกข้อมูลให้ครบถ้วนแล้วกด <strong>สั่งพิมพ์</strong></p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="field" style="min-width:220px;border-radius:9px;">
+        <label style="flex:0 0 auto;min-width:90px;"><span class="th">เลขที่</span> / No.</label>
+        <input type="text" id="f_no" placeholder="เช่น SV-2566-001">
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER INFO -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#128100;</div>
+      <h3>ข้อมูลลูกค้า — Customer Information</h3>
+    </div>
+    <div class="form-card-body">
+      <div class="form-grid form-grid-2" style="margin-bottom:14px;">
+        <div class="field">
+          <label><span class="th">ชื่อลูกค้า</span> / Customer Name</label>
+          <input type="text" id="f_customer" placeholder="ชื่อบริษัท / ลูกค้า">
+        </div>
+        <div class="field">
+          <label><span class="th">ชื่อผู้ติดต่อ</span> / Contact Person</label>
+          <input type="text" id="f_contact" placeholder="ชื่อผู้ติดต่อ">
+        </div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label><span class="th">ที่อยู่</span> / Address</label>
+          <input type="text" id="f_address" placeholder="ที่อยู่">
+        </div>
+        <div class="field">
+          <label><span class="th">โทรศัพท์</span> / Tel.</label>
+          <input type="text" id="f_tel" placeholder="0xx-xxx-xxxx">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISIT TYPE -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#9998;</div>
+      <h3>ประเภทบริการ — Type of Visit / Service</h3>
+    </div>
+    <div class="form-card-body">
+      <div class="check-group" id="visitGroup">
+        <label class="check-item" onclick="toggleCheck(this)">
+          <input type="checkbox" name="visit" value="service"> เรียกซ่อม / Service
+        </label>
+        <label class="check-item" onclick="toggleCheck(this)">
+          <input type="checkbox" name="visit" value="pm"> บริการ PM
+        </label>
+        <label class="check-item" onclick="toggleCheck(this)">
+          <input type="checkbox" name="visit" value="demo"> สาธิต/ติดตั้ง / Demo/Installation
+        </label>
+        <label class="check-item" onclick="toggleCheck(this)">
+          <input type="checkbox" name="visit" value="other"> อื่นๆ / Other
+        </label>
+      </div>
+      <div class="field">
+        <label><span class="th">อื่นๆ ระบุ</span> / Other (specify)</label>
+        <input type="text" id="f_visit_other" placeholder="ระบุประเภทบริการ (ถ้ามี)">
+      </div>
+      <div class="field">
+        <label><span class="th">วันที่</span> / Date of Visit</label>
+        <input type="date" id="f_date">
+      </div>
+    </div>
+  </div>
+
+  <!-- MACHINE -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#9881;</div>
+      <h3>ข้อมูลเครื่อง — Machine Information</h3>
+    </div>
+    <div class="form-card-body">
+      <div class="form-grid form-grid-3" style="margin-bottom:14px;">
+        <div class="field">
+          <label><span class="th">เครื่อง/รุ่น</span> / Machine/Model</label>
+          <input type="text" id="f_machine" placeholder="ชื่อเครื่อง/รุ่น">
+        </div>
+        <div class="field">
+          <label><span class="th">จำนวน</span> / Qty</label>
+          <input type="number" id="f_qty" placeholder="1" min="1">
+        </div>
+        <div class="field">
+          <label><span class="th">วันที่ติดตั้ง</span> / Ins. Date</label>
+          <input type="date" id="f_insdate">
+        </div>
+      </div>
+      <div class="field">
+        <label><span class="th">หมายเลขเครื่อง</span> / Serial No.</label>
+        <input type="text" id="f_serial" placeholder="Serial Number">
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY REPORT -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#128221;</div>
+      <h3>รายละเอียดการปฏิบัติงาน — Activity Report</h3>
+    </div>
+    <div class="form-card-body">
+      <div class="field">
+        <label><span class="th">อาการเสีย</span> / Machine Trouble</label>
+        <textarea id="f_trouble" rows="3" placeholder="อธิบายอาการเสียหรือปัญหาที่พบ"></textarea>
+      </div>
+      <div class="field">
+        <label><span class="th">สาเหตุของปัญหา/การแก้ไข</span> / Cause of Trouble / Repair</label>
+        <textarea id="f_cause" rows="4" placeholder="สาเหตุและวิธีการแก้ไขที่ดำเนินการ"></textarea>
+      </div>
+      <div class="field">
+        <label><span class="th">หมายเหตุ</span> / Remark</label>
+        <textarea id="f_remark" rows="2" placeholder="หมายเหตุเพิ่มเติม"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARGE TYPE -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#128179;</div>
+      <h3>ระยะค่าบริการ — Charge Type</h3>
+    </div>
+    <div class="form-card-body">
+      <div class="charge-group" id="chargeGroup">
+        <label class="charge-item">
+          <input type="radio" name="charge" value="paid"> คิดค่าบริการ / Service Charge
+        </label>
+        <label class="charge-item">
+          <input type="radio" name="charge" value="free"> ไม่คิดค่าบริการ / Free Service Charge
+        </label>
+        <label class="charge-item">
+          <input type="radio" name="charge" value="warranty"> ระยะการรับประกัน / Warranty
+        </label>
+        <label class="charge-item">
+          <input type="radio" name="charge" value="maintenance"> ระยะสัญญาการซ่อมบำรุง / Maintenance
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SATISFACTION -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#9733;</div>
+      <h3>ความพึงพอใจในการบริการ — Service Quality Satisfaction</h3>
+    </div>
+    <div class="form-card-body">
+      <p style="font-size:14px;color:var(--muted);margin-bottom:12px;">How about service quality satisfied are you?</p>
+      <div class="rating-group" id="ratingGroup">
+        <label class="rating-item" onclick="selectRating(this, 4)">
+          <input type="radio" name="rating" value="4">
+          <span class="rating-num">4</span>
+          <span class="rating-th">ยอดเยี่ยม</span>
+          <span class="rating-en">Excellent</span>
+        </label>
+        <label class="rating-item" onclick="selectRating(this, 3)">
+          <input type="radio" name="rating" value="3">
+          <span class="rating-num">3</span>
+          <span class="rating-th">ดี</span>
+          <span class="rating-en">Good</span>
+        </label>
+        <label class="rating-item" onclick="selectRating(this, 2)">
+          <input type="radio" name="rating" value="2">
+          <span class="rating-num">2</span>
+          <span class="rating-th">พอใช้</span>
+          <span class="rating-en">Fair</span>
+        </label>
+        <label class="rating-item" onclick="selectRating(this, 1)">
+          <input type="radio" name="rating" value="1">
+          <span class="rating-num">1</span>
+          <span class="rating-th">ควรปรับปรุง</span>
+          <span class="rating-en">Need Improvement</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNATURES & TIME -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="section-icon">&#9998;</div>
+      <h3>ลายเซ็นและเวลา — Signatures & Time</h3>
+    </div>
+    <div class="form-card-body">
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label><span class="th">ลงชื่อผู้ให้บริการ (ชื่อเต็ม)</span> / Tech Signed (Full Name)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="f_techsign" style="flex:1;font-family:inherit;font-size:14px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;color:var(--text);background:#fafafa;">
+              <option value="">-- เลือกชื่อช่าง --</option>
+            </select>
+            <button type="button" onclick="openTechManager()" style="padding:8px 14px;border-radius:7px;border:1.5px solid var(--blue-mid);background:var(--blue-light);color:var(--blue);font-family:inherit;font-size:13px;cursor:pointer;white-space:nowrap;">✏️ จัดการ</button>
+          </div>
+        </div>
+        <div class="field">
+          <label><span class="th">ลงชื่อลูกค้า (ชื่อเต็ม)</span> / Cus. Signed (Full Name)</label>
+          <input type="text" id="f_cussign" placeholder="ชื่อ-นามสกุล ผู้รับบริการ">
+        </div>
+      </div>
+
+      <!-- TECH SIGNATURE PAD -->
+      <div class="field" style="align-items:stretch;">
+        <label style="align-self:stretch;justify-content:flex-start;padding-top:12px;"><span class="th">ลายเซ็นผู้ปฏิบัติงาน</span> / Technician Signature</label>
+        <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:6px;">
+          <div style="position:relative; border:1.5px solid var(--border); border-radius:7px; background:#fafafa; overflow:hidden;">
+            <canvas id="techSigCanvas" width="600" height="130"
+              style="display:block; width:100%; height:130px; cursor:crosshair; touch-action:none;"></canvas>
+            <div id="techSigPlaceholder" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#bbb;font-size:13px;pointer-events:none;user-select:none;">
+              ✍️ เซ็นชื่อที่นี่ / Sign here
+            </div>
+          </div>
+          <button type="button" onclick="clearTechSig()"
+            style="align-self:flex-start;padding:5px 16px;border-radius:6px;border:1px solid var(--border);background:white;color:var(--accent);font-family:inherit;font-size:13px;cursor:pointer;">
+            ✕ ล้างลายเซ็น / Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- CUSTOMER SIGNATURE PAD -->
+      <div class="field" style="align-items:stretch;">
+        <label style="align-self:stretch;justify-content:flex-start;padding-top:12px;"><span class="th">ลายเซ็นลูกค้า</span> / Customer Signature</label>
+        <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:6px;">
+          <div style="position:relative; border:1.5px solid var(--border); border-radius:7px; background:#fafafa; overflow:hidden;">
+            <canvas id="sigCanvas" width="600" height="130"
+              style="display:block; width:100%; height:130px; cursor:crosshair; touch-action:none;"></canvas>
+            <div id="sigPlaceholder" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#bbb;font-size:13px;pointer-events:none;user-select:none;">
+              ✍️ เซ็นชื่อที่นี่ / Sign here
+            </div>
+          </div>
+          <button type="button" onclick="clearSig()"
+            style="align-self:flex-start;padding:5px 16px;border-radius:6px;border:1px solid var(--border);background:white;color:var(--accent);font-family:inherit;font-size:13px;cursor:pointer;">
+            ✕ ล้างลายเซ็น / Clear
+          </button>
+        </div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="field">
+          <label><span class="th">เวลาเริ่มงาน</span> / Arrival Time</label>
+          <input type="time" id="f_arrival" style="font-size:15px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;background:#fafafa;color:var(--text);outline:none;">
+        </div>
+        <div class="field">
+          <label><span class="th">เวลาเสร็จงาน</span> / Job Complete Time</label>
+          <input type="time" id="f_jobdone" style="font-size:15px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:inherit;background:#fafafa;color:var(--text);outline:none;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTION BUTTONS (bottom) -->
+  <div style="text-align:center; margin-top:28px; display:flex; flex-wrap:wrap; gap:12px; justify-content:center; flex-direction:column; align-items:center;">
+    <div id="saveReminder" style="background:#fff3cd;border:1.5px solid #f0ad00;border-radius:8px;padding:10px 20px;font-size:14px;color:#856404;display:flex;align-items:center;gap:8px;">
+      ⚠️ กรุณา <strong>บันทึกข้อมูล</strong> ก่อนสั่งพิมพ์หรือบันทึก PDF
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+    <button class="btn" onclick="saveToSheets()" id="saveBtnBottom" style="font-size:15px;padding:13px 32px;border-radius:10px;background:var(--accent);color:white;border:none;box-shadow:0 4px 18px rgba(211,47,47,0.35);">
+      &#128190; &nbsp; บันทึกข้อมูล
+    </button>
+    <button class="btn" onclick="printReport('print')" style="font-size:15px;padding:13px 32px;border-radius:10px;background:var(--blue);color:white;border:none;box-shadow:0 4px 18px rgba(26,86,160,0.25);">
+      &#128438; &nbsp; สั่งพิมพ์
+    </button>
+    <button class="btn" id="pdfBtnBottom" onclick="printReport('pdf')" style="font-size:15px;padding:13px 32px;border-radius:10px;background:#2e7d32;color:white;border:none;box-shadow:0 4px 18px rgba(46,125,50,0.25);">
+      &#128196; &nbsp; บันทึก PDF
+    </button>
+    <button class="btn" onclick="shareToLine()" style="font-size:15px;padding:13px 32px;border-radius:10px;background:#06C755;color:white;border:none;box-shadow:0 4px 18px rgba(6,199,85,0.3);">
+      &#128172; &nbsp; ส่ง Line
+    </button>
+    </div>
+  </div>
+
+</div><!-- /app-wrapper -->
+
+<script>
+// ===== DATA SAVED FLAG =====
+let dataSaved = false;
+
+function updateSaveUI() {
+  const reminder = document.getElementById('saveReminder');
+  const saveBtnBottom = document.getElementById('saveBtnBottom');
+  const saveBtn = document.getElementById('saveBtn');
+  if (dataSaved) {
+    if (reminder) reminder.style.display = 'none';
+    if (saveBtnBottom) {
+      saveBtnBottom.style.background = '#2e7d32';
+      saveBtnBottom.style.boxShadow = '0 4px 18px rgba(46,125,50,0.25)';
+      saveBtnBottom.innerHTML = '✅ &nbsp; บันทึกแล้ว';
+    }
+    if (saveBtn) {
+      saveBtn.className = 'btn btn-outline';
+      saveBtn.innerHTML = '✅ <span>บันทึกแล้ว</span>';
+    }
+  } else {
+    if (reminder) reminder.style.display = 'flex';
+    if (saveBtnBottom) {
+      saveBtnBottom.style.background = 'var(--accent)';
+      saveBtnBottom.style.boxShadow = '0 4px 18px rgba(211,47,47,0.35)';
+      saveBtnBottom.innerHTML = '&#128190; &nbsp; บันทึกข้อมูล';
+    }
+    if (saveBtn) {
+      saveBtn.className = 'btn btn-danger';
+      saveBtn.innerHTML = '&#128190; <span>บันทึกข้อมูล</span>';
+    }
+  }
+}
+
+function markFormDirty() {
+  dataSaved = false;
+  updateSaveUI();
+}
+
+// ติด event listener ทุก input/textarea/select เพื่อ reset flag เมื่อมีการแก้ไข
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input, textarea, select').forEach(function(el) {
+    el.addEventListener('change', markFormDirty);
+    el.addEventListener('input', markFormDirty);
+  });
+  updateSaveUI();
+});
+
+function toggleCheck(el) {
+  el.classList.toggle('active');
+  markFormDirty();
+}
+
+function selectRating(el, val) {
+  document.querySelectorAll('.rating-item').forEach(r => {
+    r.classList.remove('selected-1','selected-2','selected-3','selected-4');
+  });
+  el.classList.add('selected-' + val);
+}
+
+function fv(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function getChecked(name) {
+  return Array.from(document.querySelectorAll('input[name="'+name+'"]:checked')).map(i => i.value);
+}
+
+function getRadio(name) {
+  const el = document.querySelector('input[name="'+name+'"]:checked');
+  return el ? el.value : '';
+}
+
+function checkBox(val) {
+  return '<span class="pchk' + (val ? ' checked' : '') + '"></span>';
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const parts = d.split('-');
+  if (parts.length !== 3) return d;
+  const thYear = parseInt(parts[0]) + 543;
+  return parts[2] + '/' + parts[1] + '/' + thYear;
+}
+
+function formatTime(t) {
+  if (!t) return '';
+  return t + ' น.';
+}
+
+function chargeLabel(v) {
+  const map = { paid:'คิดค่าบริการ', free:'ไม่คิดค่าบริการ', warranty:'ระยะรับประกัน', maintenance:'ระยะสัญญาบำรุง' };
+  return map[v] || '';
+}
+
+function ratingLabel(v) {
+  const map = { '4':'ยอดเยี่ยม [4]', '3':'ดี [3]', '2':'พอใช้ [2]', '1':'ควรปรับปรุง [1]' };
+  return map[v] || '';
+}
+
+function visitLabel(v) {
+  const map = { service:'เรียกซ่อม', pm:'PM', demo:'สาธิต/ติดตั้ง', other:'อื่นๆ' };
+  return map[v] || v;
+}
+
+function printReport(mode) {
+  if (!dataSaved) {
+    const action = mode === 'pdf' ? 'บันทึก PDF' : 'สั่งพิมพ์';
+    alert(
+      '🚫 ไม่สามารถ' + action + 'ได้\n\n' +
+      'กรุณากด "บันทึกข้อมูล" ให้สำเร็จก่อน\nจึงจะสามารถ' + action + 'ได้'
+    );
+    return;
+  }
+
+  const visits = getChecked('visit');
+  const charge = getRadio('charge');
+  const rating = getRadio('rating');
+  const no = fv('f_no');
+  const date = fv('f_date');
+  const customer = fv('f_customer');
+  const contact = fv('f_contact');
+  const address = fv('f_address');
+  const tel = fv('f_tel');
+  const machine = fv('f_machine');
+  const qty = fv('f_qty');
+  const insdate = fv('f_insdate');
+  const serial = fv('f_serial');
+  const trouble = fv('f_trouble');
+  const cause = fv('f_cause');
+  const remark = fv('f_remark');
+  const techsign = fv('f_techsign');
+  const cussign = fv('f_cussign');
+  const sigDataURL     = window.getSigDataURL     ? window.getSigDataURL()     : null;
+  const techSigDataURL = window.getTechSigDataURL ? window.getTechSigDataURL() : null;
+  const arrival = fv('f_arrival');
+  const jobdone = fv('f_jobdone');
+  const visitOther = fv('f_visit_other');
+
+  const arrH = arrival ? arrival.split(':')[0] : '';
+  const arrM = arrival ? arrival.split(':')[1] : '';
+  const jdH  = jobdone ? jobdone.split(':')[0] : '';
+  const jdM  = jobdone ? jobdone.split(':')[1] : '';
+
+  const html = `
+  <div class="print-doc">
+
+    <!-- ===== HEADER ===== -->
+    <div class="ph-wrap">
+      <div class="ph-left">
+        <div class="ph-logo-row">
+          <div class="ph-logo-cell">
+            <div class="print-logo"><img src="data:image/png;base64,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" alt="OGA Logo"></div>
+          </div>
+          <div class="ph-company-cell">
+            <div class="c1">บริษัท โอ จี เอ อินเตอร์เนชั่นแนล จำกัด</div>
+            <div class="c2">OGA INTERNATIONAL CO.,LTD.</div>
+            <div class="c3">
+              สำนักงานใหญ่ : 546 ถนนสุคนธสวัสดิ์ แขวงลาดพร้าว เขตลาดพร้าว กรุงเทพฯ 10230 &nbsp; โทรศัพท์ : 02-025-8888 โทรสาร : 02-025-8880<br>
+              สาขา 1 : 59/23 หมู่ 1 ตำบลหนองขาม อำเภอศรีราชา จังหวัดชลบุรี 20110 &nbsp; โทรศัพท์ : (038) 320-888 โทรสาร : (038) 320-887<br>
+              http://www.oga.co.th &nbsp;&nbsp; Call Center : 02-025-8889
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ph-right" style="vertical-align:top; padding-top:0;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end; margin-right:5mm;">
+          <span class="sr-title" style="display:inline-block;">SERVICE REPORT</span>
+          <div class="sr-no" style="margin-top:5mm; margin-right:0mm;">เลขที่ No. <span class="noline" style="text-align:center;">${no}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CUSTOMER / VISIT TYPE (2-col) ===== -->
+    <div class="p-cust-wrap">
+      <div class="p-cust-left">
+        <div class="pf">
+          <span class="pf-lbl"><span class="lbl-th">ชื่อลูกค้า</span><br><span class="lbl-en">Customer Name</span></span>
+          <span class="pf-val">${customer}</span>
+        </div>
+        <div class="pf">
+          <span class="pf-lbl"><span class="lbl-th">ที่อยู่/โทรศัพท์</span><br><span class="lbl-en">Address/Tel.</span></span>
+          <span class="pf-val">${address}</span>
+          <span class="pf-val" style="margin-top:1mm;">${tel}</span>
+        </div>
+        <div class="pf">
+          <span class="pf-lbl"><span class="lbl-th">ชื่อผู้ติดต่อ</span><br><span class="lbl-en">Contact Person</span></span>
+          <span class="pf-val">${contact}</span>
+        </div>
+      </div>
+      <div class="p-cust-right">
+        <!-- วันที่ อยู่เหนือประเภทบริการ -->
+        <div style="margin-bottom:2mm; display:flex; align-items:center; gap:4px; font-size:8.5pt;">
+          <span style="font-weight:600; white-space:nowrap;"><span style="display:block;font-size:8.5pt;font-weight:600;">วันที่</span><span style="display:block;font-size:7pt;color:#444;">Date of Visit</span></span>
+          <span style="border-bottom:1px solid #000; flex:1; min-height:13px; display:inline-block; padding-bottom:1px; font-size:8.5pt;">${formatDate(date)}</span>
+        </div>
+        <div style="font-size:8.5pt; font-weight:600; margin-bottom:1.5mm;">
+          <span class="lbl-th">ประเภทบริการ</span><br><span class="lbl-en">Type of Visit/Service</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm; font-size:8.5pt;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <div class="p-visit-opt">${checkBox(visits.includes('service'))} <span><span class="lbl-th">เรียกซ่อม</span><br><span class="lbl-en">Service</span></span></div>
+            <div class="p-visit-opt">${checkBox(visits.includes('pm'))} <span><span class="lbl-th">บริการ</span><br><span class="lbl-en">P.M.</span></span></div>
+            <div class="p-visit-opt">${checkBox(visits.includes('demo'))} <span><span class="lbl-th">สาธิต/ติดตั้ง</span><br><span class="lbl-en">Demo/Installation</span></span></div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <div class="p-visit-opt">${checkBox(visits.includes('other'))} <span><span class="lbl-th">อื่นๆ</span><br><span class="lbl-en">Other</span></span></div>
+            <span style="border-bottom:1px solid #666; flex:1; min-height:13px; display:inline-block; font-size:8.5pt; padding-bottom:1px;">${visitOther}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== ACTIVITY BOX ===== -->
+    <div class="p-act-box">
+      <div class="p-act-title">
+        <span class="lbl-th" style="font-size:10pt;">รายละเอียดในการปฏิบัติงาน</span><br>
+        <span class="lbl-en" style="font-size:9pt; font-weight:600; letter-spacing:0.3px;">ACTIVITY REPORT</span>
+      </div>
+
+      <!-- Machine row -->
+      <div class="p-mrow">
+        <div class="p-mcell" style="width:45%">
+          <div class="pf-lbl"><span class="lbl-th">เครื่อง/รุ่น</span><br><span class="lbl-en">Machine/Model</span></div>
+          <div class="pf-val">${machine}</div>
+        </div>
+        <div class="p-mcell" style="width:18%">
+          <div class="pf-lbl" style="text-align:center;"><span class="lbl-th">จำนวน</span><br><span class="lbl-en">(Qty)</span></div>
+          <div class="pf-val" style="text-align:center; padding-left:0;">${qty}</div>
+        </div>
+        <div class="p-mcell" style="width:37%">
+          <div class="pf-lbl"><span class="lbl-th">วันที่ติดตั้ง</span><br><span class="lbl-en">Ins. Date</span></div>
+          <div class="pf-val">${formatDate(insdate)}</div>
+        </div>
+      </div>
+
+      <!-- Serial -->
+      <div class="pf" style="margin-bottom:3mm;">
+        <span class="pf-lbl"><span class="lbl-th">หมายเลข</span><br><span class="lbl-en">Serial No.</span></span>
+        <span class="pf-val">${serial}</span>
+      </div>
+
+      <!-- Trouble -->
+      <div class="pf" style="margin-bottom:2mm;">
+        <span class="pf-lbl"><span class="lbl-th">อาการเสีย</span><br><span class="lbl-en">Machine Trouble</span></span>
+        <span class="pf-val" style="min-height:18px;">${trouble.replace(/\n/g,'<br>')}</span>
+        <span class="pf-val" style="min-height:14px;"></span>
+      </div>
+
+      <!-- Cause -->
+      <div class="pf" style="margin-bottom:2mm;">
+        <span class="pf-lbl"><span class="lbl-th">สาเหตุของปัญหา/การแก้ไข</span><br><span class="lbl-en">Cause of Trouble/Repair</span></span>
+        <span class="pf-val" style="min-height:18px;">${cause.replace(/\n/g,'<br>')}</span>
+        <span class="pf-val" style="min-height:14px;"></span>
+        <span class="pf-val" style="min-height:14px;"></span>
+      </div>
+
+      <!-- Remark -->
+      <div class="pf" style="margin-bottom:1mm;">
+        <span class="pf-lbl"><span class="lbl-th">หมายเหตุ</span><br><span class="lbl-en">Remark</span></span>
+        <span class="pf-val" style="min-height:14px;">${remark}</span>
+      </div>
+    </div>
+
+    <!-- ===== CHARGE ROW ===== -->
+    <div class="p-charge-row">
+      <div class="p-charge-cell">${checkBox(charge==='paid')} &nbsp;<span><span class="lbl-th" style="font-weight:600">คิดค่าบริการ</span><br><span class="lbl-en">Service Charge</span></span></div>
+      <div class="p-charge-cell">${checkBox(charge==='free')} &nbsp;<span><span class="lbl-th" style="font-weight:600">ไม่คิดค่าบริการ</span><br><span class="lbl-en">Free Service Charge</span></span></div>
+      <div class="p-charge-cell">${checkBox(charge==='warranty')} &nbsp;<span><span class="lbl-th" style="font-weight:600">ระยะการรับประกัน</span><br><span class="lbl-en">Warranty</span></span></div>
+      <div class="p-charge-cell">${checkBox(charge==='maintenance')} &nbsp;<span><span class="lbl-th" style="font-weight:600">ระยะสัญญาการซ่อมบำรุง</span><br><span class="lbl-en">Maintenance</span></span></div>
+    </div>
+
+    <!-- ===== SATISFACTION ===== -->
+    <div class="p-sat-box">
+      <div class="p-sat-q">How about service quality satisfied are you?</div>
+      <div class="p-sat-opts">
+        <div class="p-sat-opt">${checkBox(rating==='4')} &nbsp;<span><span class="lbl-th" style="font-weight:600">ยอดเยี่ยม</span><br><span class="lbl-en">Excellent [4]</span></span></div>
+        <div class="p-sat-opt">${checkBox(rating==='3')} &nbsp;<span><span class="lbl-th" style="font-weight:600">ดี</span><br><span class="lbl-en">Good [3]</span></span></div>
+        <div class="p-sat-opt">${checkBox(rating==='2')} &nbsp;<span><span class="lbl-th" style="font-weight:600">พอใช้</span><br><span class="lbl-en">Fair [2]</span></span></div>
+        <div class="p-sat-opt">${checkBox(rating==='1')} &nbsp;<span><span class="lbl-th" style="font-weight:600">ควรปรับปรุง</span><br><span class="lbl-en">Need Improvement [1]</span></span></div>
+      </div>
+    </div>
+
+    <!-- ===== SIGNATURES + TIME COMBINED ===== -->
+    <div class="p-sig-time-row">
+      <div class="p-sig-time-cell">
+        <div class="p-sig-lbl"><span class="lbl-th">ลงชื่อผู้ให้บริการ</span><br><span class="lbl-en">Tech Signed</span></div>
+        ${techSigDataURL
+          ? `<img src="${techSigDataURL}" style="height:36px;max-width:100%;display:block;margin:1px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">`
+          : `<div class="p-sig-line"></div>`}
+        <div class="p-sig-note">(${techsign || 'ลงชื่อตัวบรรจง / Full Name'})</div>
+      </div>
+      <div class="p-sig-time-cell">
+        <div class="p-sig-lbl"><span class="lbl-th">ลงชื่อลูกค้า</span><br><span class="lbl-en">Cus. Signed</span></div>
+        ${sigDataURL
+          ? `<img src="${sigDataURL}" style="height:36px;max-width:100%;display:block;margin:1px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">`
+          : `<div class="p-sig-line"></div>`}
+        <div class="p-sig-note">(${cussign || 'ลงชื่อตัวบรรจง / Full Name'})</div>
+      </div>
+      <div class="p-sig-time-cell">
+        <div class="p-sig-lbl"><span class="lbl-th">เวลาเริ่มงาน</span><br><span class="lbl-en">Arrival Time</span></div>
+        <div class="p-time-inner">
+          <span class="p-time-val">${arrH}</span>
+          <span class="p-time-sep">:</span>
+          <span class="p-time-val">${arrM}</span>
+          <span class="p-time-unit">น.</span>
+        </div>
+      </div>
+      <div class="p-sig-time-cell">
+        <div class="p-sig-lbl"><span class="lbl-th">เวลาเสร็จงาน</span><br><span class="lbl-en">Job Complete</span></div>
+        <div class="p-time-inner">
+          <span class="p-time-val">${jdH}</span>
+          <span class="p-time-sep">:</span>
+          <span class="p-time-val">${jdM}</span>
+          <span class="p-time-unit">น.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="p-footer" style="display:flex; justify-content:space-between;"><span>FM-OGA/SV-001, Rev.04</span><span>01/11/2566</span></div>
+  </div>`;
+
+  document.getElementById('print-area').innerHTML = html;
+
+  if (mode === 'print') {
+    // --- สั่งพิมพ์แบบเดิม ---
+    window.print();
+    return;
+  }
+
+  // --- บันทึก PDF (รองรับมือถือ) ---
+  // ใช้ปุ่มที่ถูกคลิก (topbar หรือ bottom) เพื่อแสดงสถานะ
+  const pdfBtn = document.getElementById('pdfBtnBottom') || document.getElementById('pdfBtn');
+  const pdfBtnTop = document.getElementById('pdfBtn');
+  const originalLabel = pdfBtn ? pdfBtn.innerHTML : '';
+  const originalLabelTop = pdfBtnTop ? pdfBtnTop.innerHTML : '';
+  if (pdfBtn) { pdfBtn.disabled = true; pdfBtn.innerHTML = '⏳ <span>กำลังสร้าง...</span>'; }
+  if (pdfBtnTop) { pdfBtnTop.disabled = true; pdfBtnTop.innerHTML = '⏳'; }
+
+  document.fonts.ready.then(function() {
+    const printArea = document.getElementById('print-area');
+    printArea.style.display = 'block';
+
+    const docEl = printArea.querySelector('.print-doc');
+    if (docEl) { docEl.style.overflow = 'visible'; docEl.style.maxHeight = 'none'; }
+
+    // กำหนดขนาด canvas ให้ตรงกับ A4 พอดี (210x297mm ที่ 96dpi scale=2)
+    const A4_W_PX = Math.round(210 * 96 / 25.4) * 2; // ~1587px
+    const A4_H_PX = Math.round(297 * 96 / 25.4) * 2; // ~2245px
+
+    html2canvas(printArea, {
+      scale: 2, useCORS: true, allowTaint: true,
+      backgroundColor: '#ffffff', logging: false,
+      width: Math.round(210 * 96 / 25.4),   // 210mm → px
+      height: Math.round(297 * 96 / 25.4),  // 297mm → px
+      windowWidth: Math.round(210 * 96 / 25.4),
+    }).then(function(canvas) {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();   // 210mm
+      const pageH = pdf.internal.pageSize.getHeight();  // 297mm
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // วางรูปให้เต็มหน้า A4 พอดีเสมอ
+      pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH);
+
+      const fileName = 'ServiceReport' + (no ? '_' + no : '') + '.pdf';
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+      if (isIOS) {
+        // iOS: เปิด PDF ใน tab ใหม่ แล้วกด Share → Save to Files
+        const pdfBlob = pdf.output('blob');
+        const blobURL = URL.createObjectURL(pdfBlob);
+        window.open(blobURL, '_blank');
+        setTimeout(function() {
+          alert('📄 PDF เปิดใน tab ใหม่แล้ว\n\nวิธีบันทึก:\n1. กดปุ่ม Share (กล่องมีลูกศรขึ้น)\n2. เลือก "Save to Files"\n3. เลือกตำแหน่งที่ต้องการบันทึก');
+        }, 800);
+      } else {
+        pdf.save(fileName);
+      }
+
+      printArea.style.display = 'none';
+      if (docEl) { docEl.style.overflow = ''; docEl.style.maxHeight = ''; }
+      if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.innerHTML = originalLabel; }
+      if (pdfBtnTop) { pdfBtnTop.disabled = false; pdfBtnTop.innerHTML = originalLabelTop; }
+    }).catch(function(err) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+      printArea.style.display = 'none';
+      if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.innerHTML = originalLabel; }
+      if (pdfBtnTop) { pdfBtnTop.disabled = false; pdfBtnTop.innerHTML = originalLabelTop; }
+    });
+  });
+}
+
+function resetForm() {
+  if (!confirm('ต้องการล้างข้อมูลทั้งหมด?')) return;
+  document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea').forEach(el => el.value = '');
+  document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => el.checked = false);
+  document.querySelectorAll('.check-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.rating-item').forEach(el => el.classList.remove('selected-1','selected-2','selected-3','selected-4'));
+}
+
+// ===== CUSTOMER SIGNATURE PAD =====
+(function() {
+  let canvas, ctx, drawing = false, hasSig = false;
+
+  function init() {
+    canvas = document.getElementById('sigCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Mouse
+    canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(pos(e).x, pos(e).y); });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; draw(pos(e)); });
+    canvas.addEventListener('mouseup',   () => stop());
+    canvas.addEventListener('mouseleave',() => stop());
+
+    // Touch
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; ctx.beginPath(); ctx.moveTo(pos(e).x, pos(e).y); }, {passive:false});
+    canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!drawing) return; draw(pos(e)); }, {passive:false});
+    canvas.addEventListener('touchend',   () => stop());
+  }
+
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+  }
+
+  function draw(p) {
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    hasSig = true;
+    document.getElementById('sigPlaceholder').style.display = 'none';
+  }
+
+  function stop() { drawing = false; }
+
+  window.clearSig = function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSig = false;
+    document.getElementById('sigPlaceholder').style.display = '';
+  };
+
+  window.getSigDataURL = function() {
+    return hasSig ? canvas.toDataURL('image/png') : null;
+  };
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+// ===== TECH SIGNATURE PAD =====
+(function() {
+  let canvas, ctx, drawing = false, hasSig = false;
+
+  function init() {
+    canvas = document.getElementById('techSigCanvas');
+    if (!canvas) return;
+    ctx = canvas.getContext('2d');
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(pos(e).x, pos(e).y); });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; draw(pos(e)); });
+    canvas.addEventListener('mouseup',   () => stop());
+    canvas.addEventListener('mouseleave',() => stop());
+
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); drawing = true; ctx.beginPath(); ctx.moveTo(pos(e).x, pos(e).y); }, {passive:false});
+    canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (!drawing) return; draw(pos(e)); }, {passive:false});
+    canvas.addEventListener('touchend',   () => stop());
+  }
+
+  function pos(e) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return { x: (src.clientX - r.left) * scaleX, y: (src.clientY - r.top) * scaleY };
+  }
+
+  function draw(p) {
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    hasSig = true;
+    document.getElementById('techSigPlaceholder').style.display = 'none';
+  }
+
+  function stop() { drawing = false; }
+
+  window.clearTechSig = function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSig = false;
+    document.getElementById('techSigPlaceholder').style.display = '';
+  };
+
+  window.getTechSigDataURL = function() {
+    return hasSig ? canvas.toDataURL('image/png') : null;
+  };
+
+  document.addEventListener('DOMContentLoaded', init);
+})();
+
+// ===== SEND EMAIL =====
+function sendEmail() {
+  const no       = fv('f_no');
+  const date     = fv('f_date');
+  const customer = fv('f_customer');
+  const contact  = fv('f_contact');
+  const address  = fv('f_address');
+  const tel      = fv('f_tel');
+  const machine  = fv('f_machine');
+  const qty      = fv('f_qty');
+  const serial   = fv('f_serial');
+  const trouble  = fv('f_trouble');
+  const cause    = fv('f_cause');
+  const remark   = fv('f_remark');
+  const techsign = fv('f_techsign');
+  const cussign  = fv('f_cussign');
+  const arrival  = fv('f_arrival');
+  const jobdone  = fv('f_jobdone');
+  const charge   = getRadio('charge');
+  const rating   = getRadio('rating');
+  const visits   = getChecked('visit').map(visitLabel).join(', ');
+
+  const chargeMap = { paid:'คิดค่าบริการ', free:'ไม่คิดค่าบริการ', warranty:'ระยะรับประกัน', maintenance:'ระยะสัญญาบำรุง' };
+  const ratingMap = { '4':'ยอดเยี่ยม [4]', '3':'ดี [3]', '2':'พอใช้ [2]', '1':'ควรปรับปรุง [1]' };
+
+  const toEmail = prompt('กรุณากรอก Email ที่ต้องการส่ง:');
+  if (!toEmail) return;
+
+  const subject = encodeURIComponent('Service Report' + (no ? ' เลขที่ ' + no : '') + (customer ? ' — ' + customer : ''));
+
+  const body = encodeURIComponent(
+    '=== OGA SERVICE REPORT ===\n' +
+    (no      ? 'เลขที่ No.       : ' + no      + '\n' : '') +
+    (date    ? 'วันที่ Date      : ' + formatDate(date) + '\n' : '') +
+    '\n--- ข้อมูลลูกค้า ---\n' +
+    (customer ? 'ชื่อลูกค้า     : ' + customer + '\n' : '') +
+    (contact  ? 'ผู้ติดต่อ      : ' + contact  + '\n' : '') +
+    (address  ? 'ที่อยู่        : ' + address  + '\n' : '') +
+    (tel      ? 'โทรศัพท์      : ' + tel      + '\n' : '') +
+    '\n--- ข้อมูลเครื่อง ---\n' +
+    (machine  ? 'เครื่อง/รุ่น  : ' + machine  + '\n' : '') +
+    (qty      ? 'จำนวน         : ' + qty      + '\n' : '') +
+    (serial   ? 'Serial No.    : ' + serial   + '\n' : '') +
+    '\n--- รายละเอียดการปฏิบัติงาน ---\n' +
+    (visits   ? 'ประเภทบริการ  : ' + visits   + '\n' : '') +
+    (trouble  ? 'อาการเสีย     : ' + trouble  + '\n' : '') +
+    (cause    ? 'สาเหตุ/แก้ไข : ' + cause    + '\n' : '') +
+    (remark   ? 'หมายเหตุ      : ' + remark   + '\n' : '') +
+    '\n--- ค่าบริการและความพึงพอใจ ---\n' +
+    (charge   ? 'ค่าบริการ     : ' + (chargeMap[charge] || charge) + '\n' : '') +
+    (rating   ? 'ความพึงพอใจ  : ' + (ratingMap[rating] || rating) + '\n' : '') +
+    '\n--- ลายเซ็นและเวลา ---\n' +
+    (techsign ? 'ผู้ปฏิบัติงาน : ' + techsign + '\n' : '') +
+    (cussign  ? 'ลูกค้า        : ' + cussign  + '\n' : '') +
+    (arrival  ? 'เวลาเริ่มงาน  : ' + arrival  + ' น.\n' : '') +
+    (jobdone  ? 'เวลาเสร็จงาน : ' + jobdone  + ' น.\n' : '') +
+    '\n— ส่งจากระบบ OGA Service Report —'
+  );
+
+  window.location.href = 'mailto:' + toEmail + '?subject=' + subject + '&body=' + body;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f_date').value = today;
+
+  // ===== รับค่าจาก query string (จาก history.html) =====
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('no')) {
+    const fields = ['no','date','customer','contact','address','tel','machine','qty','insdate','serial','visit_other','trouble','cause','remark','arrival','jobdone','cussign'];
+    fields.forEach(f => {
+      const el = document.getElementById('f_' + f);
+      if (el && params.has(f)) el.value = params.get(f);
+    });
+
+    // ช่างผู้ให้บริการ (select)
+    const techEl = document.getElementById('f_techsign');
+    if (techEl && params.has('techsign')) {
+      const techVal = params.get('techsign');
+      if (techVal && !Array.from(techEl.options).some(o => o.value === techVal)) {
+        const opt = document.createElement('option');
+        opt.value = techVal; opt.textContent = techVal;
+        techEl.appendChild(opt);
+      }
+      techEl.value = techVal;
+    }
+
+    // checkboxes ประเภทบริการ
+    if (params.has('visits')) {
+      const visitsRaw = params.get('visits');
+      const visitMap = { 'เรียกซ่อม':'service', 'PM':'pm', 'สาธิต/ติดตั้ง':'demo', 'อื่นๆ':'other' };
+      document.querySelectorAll('input[name="visit"]').forEach(cb => {
+        const active = visitsRaw.split(',').some(v => visitMap[v.trim()] === cb.value);
+        cb.checked = active;
+        const lbl = cb.closest('label');
+        if (lbl) lbl.classList.toggle('active', active);
+      });
+    }
+
+    // radio ค่าบริการ
+    if (params.has('charge')) {
+      const chargeMap = { 'คิดค่าบริการ':'paid', 'ไม่คิดค่าบริการ':'free', 'ระยะรับประกัน':'warranty', 'ระยะสัญญาบำรุง':'maintenance' };
+      const chargeVal = chargeMap[params.get('charge')] || '';
+      document.querySelectorAll('input[name="charge"]').forEach(rb => { rb.checked = rb.value === chargeVal; });
+    }
+
+    // radio ความพึงพอใจ + UI class
+    if (params.has('rating')) {
+      const ratingMap = { 'ยอดเยี่ยม':'4', 'ดี':'3', 'พอใช้':'2', 'ควรปรับปรุง':'1' };
+      const ratingVal = ratingMap[params.get('rating')] || '';
+      document.querySelectorAll('input[name="rating"]').forEach(rb => {
+        rb.checked = rb.value === ratingVal;
+        const item = rb.closest('.rating-item');
+        if (item) {
+          item.classList.remove('selected-1','selected-2','selected-3','selected-4');
+          if (rb.checked && ratingVal) item.classList.add('selected-'+ratingVal);
+        }
+      });
+    }
+
+    // auto print ถ้ามี flag
+    if (params.get('autoprint') === '1') {
+      setTimeout(() => printReport('print'), 800);
+    }
+  }
+});
+
+// ===== APPS SCRIPT CONFIG =====
+// *** วาง URL จาก Deploy → Web App ตรงนี้ ***
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUJko7dEkqIt_YfzlKj3pFA3217axKXWFrCsYODhY6mUJk4X3F_I-1JCAegDyKad6t/exec';
+
+// ===== GOOGLE SHEETS CONFIG =====
+const SHEET_ID = '1X-lH3ZJ7UTMV3g9MXqAoGylK7VqN46plnsezIZZML90';
+const SERVICE_ACCOUNT_EMAIL = 'oga-service@alert-weaver-498409-u7.iam.gserviceaccount.com';
+const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCz3iffEMYGZ0GQ\nIbUWhAB5u1t3RgOytDscVtV7xX44HP2aWAgbZrbJr9EqHHpp9tHz4A5mKgDXthId\nBJMlS9Edib1PWwdEr9r6OgnEFYjzwNcp79qNKl5IFaeDPzNyW+bcge9MtCeoSnPT\nkBxRh+6Ub/nIhtJyDmz2Y/pgz4mAohbS7rMYhzlWixX/ODZt8j45RTarPyLLiAiM\nd20nKjqdB8m4GIIcrE18hu4H9DUPTTONZO7toiQc2T4PsW/en5QOsHEJGQHecGq/\nMyP5cYjoNBuVuHZ8LXnox6xQ9Bunnv/HLp572si8AzBvsjr+91PGBadjiS7RpJcy\nXyESfDQzAgMBAAECggEADwZfOUR67j0A3ovaRyu2qHSMou1/0JU6nNbqFWE9dm2B\nh7uTzcoqObXMmKJxXVmnVyJfwYv/rwVABRmFOyfWq4t+e1sEw+mWtrFTcIRGAOqa\nbp/hF0qzPn1ElXOZlhN0OPZHqZYg++9gNouCuhLLTK3/5Q7SFIH8+yYF28FqYIrF\npNBXjLEYlsKc2t8w5WXQmZsSWRF4OuEGWEQYsk0+oDEchh1VCKNnZw1AdzYjrdPD\nR4aNDV9AgZrdFZ3tn65CWCQyaRyFJt3Dc1rJuiuP4IoOMCzwZZr1mhW0O89xXjAk\nXheiBs17KNadg1qsEmaM/lX2BOFib5K51s9qZhgrMQKBgQDuo6m4Makj1BJ59Vhg\n0nT/17hxXqEp9F5BdPgZWoDzf59PUBaFExEX2naSkvXUz1DD4xuTZoPdXWDFLk/m\nsC8oK+tJbN9d/XnWHQXtm7rTirm3/pvXdaNNR0j9Log6bmJvNtChmXB3kLt4RvNS\n+RT2Vr2ATFWYE3Y02TxsVlhAcQKBgQDA8/PCqysujryerm240jDzfri0vSizo7B9\nQ5LUNqCVWeJOoFD2g/xtJFYaM7VomTwNH6T2Dqr3YCzZSB35/YIGuGbPNxTlZeOO\nkoAGReXvpkpCkLkJnjhIr6ZG4JhjnTDBL4u9OHsbQrf0q8PR4K3bHRNvXn6+kBzg\nNQXv+3QQ4wKBgQCtqCWaZ3EJJItpepOcqaoAf6+1uEIZcL2ibocYlBagm2+H3OT2\nY+CddhmxIgaInXDNi5gGlKRC02/XLZNxcSZv2j33CaYmFI2ztR0aQqgaxqnNbhdk\nHDQAyW4g59q0gp1ZBw+deTYxm/4AUclByQZrGMX/9gyXhRoQ7UCeKdtA0QKBgATL\ny4pSMN+WYq/bDBUk/FyBENxFO2bDsdZbQKIPvYwY0Nw9deW6wCKCXbWHBYJVFL4K\nxFHtaWh+tn6sITqeh4XdPYj3CIjvMGnR0GbXg/CiBISFDmRjz2hXHV3zpTYMqTKU\nGPgaGE1EKkhloJdt60RgA6SoB6R69ozIJJ6jdG4bAoGAY3vADS3lZDnDDfExb2jD\nUnI7Rn0D5pNgmrA64ns8l91bTX5wezHwCooaDnewrkwUBv9r7rnSYWrvP0BCJY27\nSjAVynCgjHr/mLn+N3W3bM69+dz5gWRmK3hOzURLp0uKAL+8cOC8enyXOTAC/0iV\ng+PDJ0L5GrlYbKF4obOjwlM=\n-----END PRIVATE KEY-----`;
+
+async function getAccessToken() {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const now = Math.floor(Date.now() / 1000);
+  const claim = {
+    iss: SERVICE_ACCOUNT_EMAIL,
+    scope: 'https://www.googleapis.com/auth/spreadsheets',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now
+  };
+  function b64(obj) {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(obj))))
+      .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  const unsigned = b64(header) + '.' + b64(claim);
+  // Import private key
+  const pemBody = PRIVATE_KEY.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
+  const binaryKey = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8', binaryKey.buffer,
+    { name:'RSASSA-PKCS1-v1_5', hash:'SHA-256' },
+    false, ['sign']
+  );
+  const sig = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5', cryptoKey,
+    new TextEncoder().encode(unsigned)
+  );
+  const jwt = unsigned + '.' + btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:`grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+  });
+  const data = await resp.json();
+  return data.access_token;
+}
+
+
+// ============================================================
+//  PDF AI READER — อ่าน PDF ใบงานด้วย Claude AI ผ่าน Apps Script
+// ============================================================
+async function handlePdfUpload(event) {
+  const file = event.target.files[0];
+  // reset input ให้อัปโหลดไฟล์เดิมซ้ำได้
+  event.target.value = '';
+  if (!file) return;
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    alert('❌ กรุณาตั้งค่า APPS_SCRIPT_URL ก่อน\n\nเปิดไฟล์ HTML แล้วแก้ไขบรรทัด:\nconst APPS_SCRIPT_URL = \'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec\'');
+    return;
+  }
+
+  // แสดง overlay
+  showPdfAiOverlay('กำลังอ่านไฟล์ PDF...', 'กำลังเตรียมข้อมูล...');
+
+  try {
+    // 1. แปลง PDF → base64
+    updatePdfStatus('กำลังแปลง PDF เป็น base64...');
+    const base64 = await fileToBase64(file);
+
+    // 2. ส่งไป Apps Script
+    updatePdfStatus('กำลังส่งไปยัง Claude AI... (อาจใช้เวลา 5-15 วิ)');
+
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'extractPdf',
+        pdfBase64: base64
+      })
+    });
+
+    if (!resp.ok) throw new Error('Apps Script error: HTTP ' + resp.status);
+
+    const result = await resp.json();
+    if (result.error) throw new Error(result.error);
+
+    // 3. autofill ฟอร์ม
+    updatePdfStatus('กำลัง autofill ฟอร์ม...');
+    draftFillForm(result.data);
+
+    hidePdfAiOverlay();
+    showToastPdf('✅ AI อ่าน PDF สำเร็จ! กรุณาตรวจสอบข้อมูลอีกครั้ง');
+
+  } catch (err) {
+    hidePdfAiOverlay();
+    alert('❌ เกิดข้อผิดพลาด: ' + err.message + '\n\nตรวจสอบ:\n1. APPS_SCRIPT_URL ถูกต้อง\n2. Deploy เป็น Web App แล้ว\n3. ANTHROPIC_API_KEY ตั้งค่าแล้ว');
+  }
+}
+
+function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function() { resolve(reader.result.split(',')[1]); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function showPdfAiOverlay(title, sub) {
+  const overlay = document.getElementById('pdfAiOverlay');
+  if (!overlay) return;
+  const subEl = document.getElementById('pdfAiSub');
+  if (subEl) subEl.textContent = sub || '';
+  overlay.classList.add('show');
+}
+function hidePdfAiOverlay() {
+  const overlay = document.getElementById('pdfAiOverlay');
+  if (overlay) overlay.classList.remove('show');
+}
+function updatePdfStatus(msg) {
+  const el = document.getElementById('pdfAiStatus');
+  if (el) el.textContent = msg;
+}
+
+// Toast notification สำหรับ PDF AI
+function showToastPdf(msg) {
+  let toast = document.getElementById('pdfToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'pdfToast';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a56a0;color:white;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:500;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.4s;max-width:90%;text-align:center;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(function() { toast.style.opacity = '0'; }, 4000);
+}
+
+async function saveToSheets() {
+  const btn = document.getElementById('saveBtn');
+  const no = fv('f_no');
+  if (!no) { alert('กรุณากรอกเลขที่ใบงานก่อนบันทึก'); return; }
+
+  // ถ้าไม่ได้ตั้งค่า Apps Script ให้ fallback ใช้ Service Account เดิม
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    return saveToSheetsLegacy();
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '⏳ <span>กำลังบันทึก...</span>';
+  try {
+    const data = draftReadForm();
+    data.no = fv('f_no');
+    data.insdate = (document.getElementById('f_insdate')||{}).value || '';
+
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'saveToSheet',
+        sheetId: SHEET_ID,
+        data: data
+      })
+    });
+
+    const result = await resp.json();
+    if (result.error) throw new Error(result.error);
+
+    dataSaved = true;
+    updateSaveUI();
+    alert('✅ บันทึกข้อมูลสำเร็จ!\nเลขที่: ' + no);
+    saveToLocalHistory();
+
+  } catch(e) {
+    alert('❌ เกิดข้อผิดพลาด: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '&#128190; <span>บันทึกข้อมูล</span>';
+  }
+}
+
+// Legacy: ใช้ Service Account โดยตรง (fallback เมื่อยังไม่ได้ตั้ง Apps Script)
+async function saveToSheetsLegacy() {
+  const btn = document.getElementById('saveBtn');
+  const no = fv('f_no');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ <span>กำลังบันทึก...</span>';
+  try {
+    const token = await getAccessToken();
+    const visits = getChecked('visit').map(visitLabel).join(', ');
+    const charge = getRadio('charge');
+    const rating = getRadio('rating');
+    const chargeMap = { paid:'คิดค่าบริการ', free:'ไม่คิดค่าบริการ', warranty:'ระยะรับประกัน', maintenance:'ระยะสัญญาบำรุง' };
+    const ratingMap = { '4':'ยอดเยี่ยม', '3':'ดี', '2':'พอใช้', '1':'ควรปรับปรุง' };
+    const row = [
+      new Date().toISOString(),
+      fv('f_no'), fv('f_date'), fv('f_customer'), fv('f_contact'),
+      fv('f_address'), fv('f_tel'), fv('f_machine'), fv('f_qty'),
+      (document.getElementById('f_insdate')||{}).value||'', fv('f_serial'), visits, fv('f_visit_other'),
+      fv('f_trouble'), fv('f_cause'), fv('f_remark'),
+      chargeMap[charge]||'', ratingMap[rating]||'',
+      fv('f_techsign'), fv('f_cussign'), fv('f_arrival'), fv('f_jobdone')
+    ];
+    const checkResp = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1`,
+      { headers:{ Authorization:'Bearer '+token } }
+    );
+    const checkData = await checkResp.json();
+    if (!checkData.values) {
+      const headers = [['บันทึกเมื่อ','เลขที่','วันที่','ลูกค้า','ผู้ติดต่อ','ที่อยู่','โทรศัพท์','เครื่อง/รุ่น','จำนวน','วันติดตั้ง','Serial No.','ประเภทบริการ','อื่นๆ','อาการเสีย','สาเหตุ/แก้ไข','หมายเหตุ','ค่าบริการ','ความพึงพอใจ','ช่าง','ลูกค้า (ลงชื่อ)','เวลาเริ่ม','เวลาเสร็จ']];
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1:append?valueInputOption=RAW`,
+        { method:'POST', headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ values: headers }) });
+    }
+    const appendResp = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1!A1:append?valueInputOption=RAW`,
+      { method:'POST', headers:{ Authorization:'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ values: [row] }) }
+    );
+    if (appendResp.ok) {
+      dataSaved = true;
+      updateSaveUI();
+      alert('✅ บันทึกข้อมูลสำเร็จ!\nเลขที่: ' + no);
+      saveToLocalHistory();
+    } else {
+      const err = await appendResp.json();
+      throw new Error(err.error?.message || 'บันทึกไม่สำเร็จ');
+    }
+  } catch(e) {
+    alert('❌ เกิดข้อผิดพลาด: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '&#128190; <span>บันทึกข้อมูล</span>';
+  }
+}
+
+// ===========================
+// TECHNICIAN MANAGEMENT
+// ===========================
+function getTechs() {
+  try { return JSON.parse(localStorage.getItem('oga_techs') || '[]'); } catch(e) { return []; }
+}
+function saveTechs(arr) { localStorage.setItem('oga_techs', JSON.stringify(arr)); }
+
+function populateTechSelect() {
+  const sel = document.getElementById('f_techsign');
+  if (!sel) return;
+  const cur = sel.value;
+  const techs = getTechs();
+  sel.innerHTML = '<option value="">-- เลือกชื่อช่าง --</option>';
+  techs.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+function openTechManager() {
+  document.getElementById('techManagerModal').style.display = 'flex';
+  renderTechList();
+}
+function closeTechManager() {
+  document.getElementById('techManagerModal').style.display = 'none';
+  populateTechSelect();
+}
+function renderTechList() {
+  const techs = getTechs();
+  const el = document.getElementById('techList');
+  if (!techs.length) { el.innerHTML = '<p style="color:#999;font-size:13px;text-align:center;">ยังไม่มีรายชื่อช่าง</p>'; return; }
+  el.innerHTML = techs.map((t,i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f5f7ff;border-radius:7px;">
+      <span style="flex:1;font-size:14px;">👷 ${t}</span>
+      <button onclick="removeTech(${i})" style="padding:4px 12px;background:#fee;border:1px solid #fcc;border-radius:6px;color:#c00;font-family:inherit;font-size:12px;cursor:pointer;">ลบ</button>
+    </div>`).join('');
+}
+function addTech() {
+  const inp = document.getElementById('newTechInput');
+  const name = inp.value.trim();
+  if (!name) { inp.focus(); return; }
+  const techs = getTechs();
+  if (techs.includes(name)) { alert('มีชื่อนี้แล้ว'); return; }
+  techs.push(name);
+  saveTechs(techs);
+  inp.value = '';
+  renderTechList();
+}
+function removeTech(i) {
+  const techs = getTechs();
+  if (!confirm('ลบ "'+techs[i]+'" ?')) return;
+  techs.splice(i,1);
+  saveTechs(techs);
+  renderTechList();
+}
+
+// ===========================
+// LOCAL HISTORY
+// ===========================
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('oga_history') || '[]'); } catch(e) { return []; }
+}
+function saveHistory(arr) { localStorage.setItem('oga_history', JSON.stringify(arr)); }
+
+function saveToLocalHistory() {
+  const visits = getChecked('visit').map(visitLabel).join(', ');
+  const charge = getRadio('charge');
+  const rating = getRadio('rating');
+  const chargeMap = { paid:'คิดค่าบริการ', free:'ไม่คิดค่าบริการ', warranty:'ระยะรับประกัน', maintenance:'ระยะสัญญาบำรุง' };
+  const ratingMap = { '4':'ยอดเยี่ยม', '3':'ดี', '2':'พอใช้', '1':'ควรปรับปรุง' };
+  const record = {
+    id: Date.now(),
+    savedAt: new Date().toISOString(),
+    no: fv('f_no'), date: fv('f_date'), customer: fv('f_customer'),
+    contact: fv('f_contact'), address: fv('f_address'), tel: fv('f_tel'),
+    machine: fv('f_machine'), qty: fv('f_qty'), insdate: fv('f_insdate'),
+    serial: fv('f_serial'), visitTypes: visits, visitOther: fv('f_visit_other'),
+    trouble: fv('f_trouble'), cause: fv('f_cause'), remark: fv('f_remark'),
+    charge: chargeMap[charge]||'', rating: ratingMap[rating]||'',
+    techsign: fv('f_techsign'), cussign: fv('f_cussign'),
+    arrival: fv('f_arrival'), jobdone: fv('f_jobdone'),
+    techSig: window.getTechSigDataURL ? window.getTechSigDataURL() : null,
+    cusSig: window.getSigDataURL ? window.getSigDataURL() : null,
+    visitChecked: getChecked('visit'),
+    chargeRaw: charge, ratingRaw: rating
+  };
+  const history = getHistory();
+  history.unshift(record);
+  saveHistory(history);
+}
+
+// ===========================
+// PAGE NAVIGATION
+// ===========================
+function showPage(page) {
+  document.querySelector('.app-wrapper:not(#historyPage):not(#sheetsHistoryPage)').style.display = (page==='form') ? '' : 'none';
+  document.getElementById('historyPage').style.display = (page==='history') ? '' : 'none';
+  document.getElementById('sheetsHistoryPage').style.display = (page==='sheetsHistory') ? '' : 'none';
+  if (page==='history') renderHistory();
+  if (page==='sheetsHistory') shLoadData();
+}
+
+// ===========================
+// HISTORY PAGE
+// ===========================
+function renderHistory() {
+  const q = (document.getElementById('histSearch')||{}).value||'';
+  let records = getHistory();
+  if (q) {
+    const lq = q.toLowerCase();
+    records = records.filter(r =>
+      (r.no||'').toLowerCase().includes(lq) ||
+      (r.customer||'').toLowerCase().includes(lq) ||
+      (r.techsign||'').toLowerCase().includes(lq)
+    );
+  }
+  const el = document.getElementById('historyList');
+  if (!records.length) {
+    el.innerHTML = '<div style="text-align:center;color:#999;padding:48px 0;font-size:15px;">ยังไม่มีประวัติการบันทึก</div>';
+    return;
+  }
+  el.innerHTML = records.map(r => {
+    const d = r.date ? formatDate(r.date) : '-';
+    const saved = r.savedAt ? new Date(r.savedAt).toLocaleString('th-TH') : '';
+    return `<div class="form-card" style="margin-bottom:12px;">
+      <div style="padding:14px 20px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--blue);">📄 ${r.no||'(ไม่มีเลขที่)'} &nbsp;
+            <span style="font-size:13px;font-weight:500;color:#555;">${r.customer||''}</span>
+          </div>
+          <div style="font-size:13px;color:#666;margin-top:3px;">🗓 ${d} &nbsp;|&nbsp; 👷 ${r.techsign||'-'} &nbsp;|&nbsp; 🔧 ${r.visitTypes||'-'}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px;">บันทึกเมื่อ ${saved}</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="reprintRecord(${r.id})" style="padding:7px 16px;background:var(--blue);color:white;border:none;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">🖨 Reprint</button>
+          <button onclick="loadRecord(${r.id})" style="padding:7px 16px;background:#e8f0fb;color:var(--blue);border:1.5px solid var(--blue-mid);border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">📝 โหลดแบบฟอร์ม</button>
+          <button onclick="deleteRecord(${r.id})" style="padding:7px 14px;background:#fee;color:#c00;border:1px solid #fcc;border-radius:7px;font-family:inherit;font-size:13px;cursor:pointer;">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function deleteRecord(id) {
+  if (!confirm('ลบรายการนี้?')) return;
+  let records = getHistory();
+  records = records.filter(r => r.id !== id);
+  saveHistory(records);
+  renderHistory();
+}
+
+function loadRecord(id) {
+  const r = getHistory().find(x => x.id === id);
+  if (!r) return;
+  showPage('form');
+  setTimeout(() => {
+    document.getElementById('f_no').value = r.no||'';
+    document.getElementById('f_date').value = r.date||'';
+    document.getElementById('f_customer').value = r.customer||'';
+    document.getElementById('f_contact').value = r.contact||'';
+    document.getElementById('f_address').value = r.address||'';
+    document.getElementById('f_tel').value = r.tel||'';
+    document.getElementById('f_machine').value = r.machine||'';
+    document.getElementById('f_qty').value = r.qty||'';
+    document.getElementById('f_insdate').value = r.insdate||'';
+    document.getElementById('f_serial').value = r.serial||'';
+    document.getElementById('f_visit_other').value = r.visitOther||'';
+    document.getElementById('f_trouble').value = r.trouble||'';
+    document.getElementById('f_cause').value = r.cause||'';
+    document.getElementById('f_remark').value = r.remark||'';
+    document.getElementById('f_arrival').value = r.arrival||'';
+    document.getElementById('f_jobdone').value = r.jobdone||'';
+    // techsign
+    const sel = document.getElementById('f_techsign');
+    if (sel) sel.value = r.techsign||'';
+    document.getElementById('f_cussign').value = r.cussign||'';
+    // checkboxes
+    document.querySelectorAll('input[name="visit"]').forEach(cb => {
+      cb.checked = (r.visitChecked||[]).includes(cb.value);
+      cb.closest('label').classList.toggle('active', cb.checked);
+    });
+    // charge
+    document.querySelectorAll('input[name="charge"]').forEach(rb => { rb.checked = rb.value === r.chargeRaw; });
+    // rating
+    document.querySelectorAll('.rating-item').forEach(item => {
+      const v = item.querySelector('input') ? item.querySelector('input').value : '';
+      item.classList.remove('selected-1','selected-2','selected-3','selected-4');
+      if (v === r.ratingRaw) item.classList.add('selected-'+v);
+    });
+    dataSaved = true; updateSaveUI();
+  }, 100);
+}
+
+function reprintRecord(id) {
+  const r = getHistory().find(x => x.id === id);
+  if (!r) return;
+  // Build print HTML directly from record
+  const no = r.no||'';
+  const visits_arr = r.visitChecked || [];
+  const arrH = r.arrival ? r.arrival.split(':')[0] : '';
+  const arrM = r.arrival ? r.arrival.split(':')[1] : '';
+  const jdH  = r.jobdone ? r.jobdone.split(':')[0] : '';
+  const jdM  = r.jobdone ? r.jobdone.split(':')[1] : '';
+  const techSigDataURL = r.techSig || null;
+  const sigDataURL = r.cusSig || null;
+
+  // Reuse the print HTML builder but feed record data
+  _reprinting = r;
+  const savedValues = {};
+  ['f_no','f_date','f_customer','f_contact','f_address','f_tel','f_machine','f_qty','f_insdate','f_serial','f_visit_other','f_trouble','f_cause','f_remark','f_techsign','f_cussign','f_arrival','f_jobdone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { savedValues[id] = el.value; el.value = r[id.replace('f_','')] || ''; }
+  });
+  // special fields
+  const sel = document.getElementById('f_techsign');
+  if (sel && r.techsign) { savedValues['f_techsign'] = sel.value; sel.value = r.techsign; }
+
+  // temporarily override sig functions
+  const origGetSig = window.getSigDataURL;
+  const origGetTechSig = window.getTechSigDataURL;
+  window.getSigDataURL = () => sigDataURL;
+  window.getTechSigDataURL = () => techSigDataURL;
+  // visits
+  const savedChecks = {};
+  document.querySelectorAll('input[name="visit"]').forEach(cb => {
+    savedChecks[cb.value] = cb.checked;
+    cb.checked = visits_arr.includes(cb.value);
+  });
+  // charge
+  const savedCharge = document.querySelector('input[name="charge"]:checked');
+  document.querySelectorAll('input[name="charge"]').forEach(rb => { rb.checked = rb.value === r.chargeRaw; });
+  // rating
+  const savedRating = document.querySelector('input[name="rating"]:checked');
+  document.querySelectorAll('input[name="rating"]').forEach(rb => { rb.checked = rb.value === r.ratingRaw; });
+
+  printReport('print');
+
+  // restore
+  Object.entries(savedValues).forEach(([id,v]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = v;
+  });
+  window.getSigDataURL = origGetSig;
+  window.getTechSigDataURL = origGetTechSig;
+  document.querySelectorAll('input[name="visit"]').forEach(cb => { cb.checked = savedChecks[cb.value]||false; });
+  if (savedCharge) savedCharge.checked = true; else document.querySelectorAll('input[name="charge"]').forEach(rb => rb.checked = false);
+  if (savedRating) savedRating.checked = true; else document.querySelectorAll('input[name="rating"]').forEach(rb => rb.checked = false);
+}
+
+// ===========================
+// STATS PAGE
+// ===========================
+
+// ===========================
+// SHEETS HISTORY PAGE
+// ===========================
+function showSheetsHistory() {
+  const sess = getSession();
+  if (!sess) {
+    alert('กรุณาเข้าสู่ระบบก่อน');
+    return;
+  }
+  if (sess.role === 'admin') {
+    showPage('sheetsHistory');
+  } else {
+    document.getElementById('historyPass').value = '';
+    document.getElementById('historyLockErr').textContent = '';
+    document.getElementById('historyLockOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('historyPass').focus(), 200);
+  }
+}
+
+let shAllData = [];
+let shFiltered = [];
+let shCurrentPage = 1;
+const SH_PER_PAGE = 20;
+let shCurrentRow = null;
+
+async function shGetAccessToken() {
+  const header = { alg:'RS256', typ:'JWT' };
+  const now = Math.floor(Date.now()/1000);
+  const claim = { iss:SERVICE_ACCOUNT_EMAIL, scope:'https://www.googleapis.com/auth/spreadsheets.readonly', aud:'https://oauth2.googleapis.com/token', exp:now+3600, iat:now };
+  function b64(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  const unsigned = b64(header)+'.'+b64(claim);
+  const pemBody = PRIVATE_KEY.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
+  const binaryKey = Uint8Array.from(atob(pemBody),c=>c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey('pkcs8',binaryKey.buffer,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5',cryptoKey,new TextEncoder().encode(unsigned));
+  const jwt = unsigned+'.'+btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const resp = await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`});
+  const data = await resp.json();
+  return data.access_token;
+}
+
+async function shLoadData() {
+  document.getElementById('shTableBody').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);font-size:15px;"><div style="width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;"></div>กำลังโหลดข้อมูล...</div>';
+  document.getElementById('shPagination').style.display = 'none';
+  try {
+    const token = await shGetAccessToken();
+    const resp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1`,{headers:{Authorization:'Bearer '+token}});
+    const data = await resp.json();
+    const rows = data.values || [];
+    // เก็บ index จริงใน Sheet ไว้ใน _origRowIndex (เริ่มต้นที่ 2 เพราะแถวแรกเป็น header)
+    shAllData = rows.slice(1)
+      .map((r, i) => { const row = [...r]; row._origRowIndex = i + 2; return row; })
+      .filter(r => r && r.length > 1)
+      .reverse();
+    document.getElementById('shSumTotal').textContent = shAllData.length;
+    shApplyFilter();
+  } catch(e) {
+    document.getElementById('shTableBody').innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:48px;margin-bottom:12px;">⚠️</div><p>โหลดข้อมูลไม่สำเร็จ<br><small>${e.message}</small></p></div>`;
+  }
+}
+
+function shGetDateRange(mode) {
+  const now = new Date();
+  let from, to;
+  if (mode === 'day') {
+    from = to = now.toISOString().split('T')[0];
+  } else if (mode === 'week') {
+    const day = now.getDay();
+    const mon = new Date(now); mon.setDate(now.getDate() - ((day+6)%7));
+    const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+    from = mon.toISOString().split('T')[0]; to = sun.toISOString().split('T')[0];
+  } else if (mode === 'month') {
+    from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    to = now.toISOString().split('T')[0];
+  } else if (mode === 'year') {
+    from = `${now.getFullYear()}-01-01`;
+    to = now.toISOString().split('T')[0];
+  }
+  return { from, to };
+}
+
+function shApplyFilter() {
+  const mode = document.getElementById('shViewMode').value;
+  let dateFrom = document.getElementById('shDateFrom').value;
+  let dateTo   = document.getElementById('shDateTo').value;
+  const q = document.getElementById('shSearchQ').value.toLowerCase();
+  if (mode !== 'all') {
+    const range = shGetDateRange(mode);
+    dateFrom = range.from; dateTo = range.to;
+    document.getElementById('shDateFrom').value = dateFrom;
+    document.getElementById('shDateTo').value   = dateTo;
+  }
+  shFiltered = shAllData.filter(r => {
+    const rowDate = r[2] || '';
+    if (dateFrom && rowDate < dateFrom) return false;
+    if (dateTo   && rowDate > dateTo)   return false;
+    if (q) {
+      const hay = [r[1],r[3],r[4],r[7],r[10],r[11]].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  document.getElementById('shSumFiltered').textContent = shFiltered.length;
+  const svc = shFiltered.filter(r=>(r[11]||'').includes('เรียกซ่อม')).length;
+  document.getElementById('shSumService').textContent = svc;
+  const ratings = shFiltered.map(r=>parseInt(r[17])||0).filter(v=>v>0);
+  const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1) : '—';
+  document.getElementById('shSumRating').textContent = avg;
+  const modeLabel = {all:'ทั้งหมด',day:'วันนี้',week:'สัปดาห์นี้',month:'เดือนนี้',year:'ปีนี้'};
+  document.getElementById('shTableTitle').textContent = `📋 รายการใบงาน — ${modeLabel[mode]||''}`;
+  shCurrentPage = 1;
+  shRenderTable();
+}
+
+function shClearFilter() {
+  document.getElementById('shViewMode').value = 'all';
+  document.getElementById('shDateFrom').value = '';
+  document.getElementById('shDateTo').value   = '';
+  document.getElementById('shSearchQ').value  = '';
+  shApplyFilter();
+}
+
+function shRenderTable() {
+  if (!shFiltered.length) {
+    document.getElementById('shTableBody').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);"><div style="font-size:48px;margin-bottom:12px;">📭</div><p>ไม่พบข้อมูลในช่วงที่เลือก</p></div>';
+    document.getElementById('shPagination').style.display = 'none';
+    return;
+  }
+  const totalPages = Math.ceil(shFiltered.length / SH_PER_PAGE);
+  const start = (shCurrentPage-1)*SH_PER_PAGE;
+  const pageData = shFiltered.slice(start, start+SH_PER_PAGE);
+  const mode = document.getElementById('shViewMode').value;
+  const rmap = {'ยอดเยี่ยม':'#1b5e20;background:#e8f5e9','ดี':'#0d47a1;background:#e3f2fd','พอใช้':'#e65100;background:#fff8e1','ควรปรับปรุง':'#b71c1c;background:#ffebee'};
+  const badgeColors = {เรียกซ่อม:'#0d47a1;background:#e3f2fd',PM:'#1b5e20;background:#e8f5e9','สาธิต/ติดตั้ง':'#e65100;background:#fff8e1'};
+  function visitBadges(str) {
+    return (str||'').split(',').map(v=>v.trim()).filter(Boolean).map(v=>{
+      const c = v.includes('เรียก')?'#0d47a1;background:#e3f2fd':v.includes('PM')?'#1b5e20;background:#e8f5e9':v.includes('สาธิต')?'#e65100;background:#fff8e1':'#4a148c;background:#f3e5f5';
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;color:${c};">${v}</span>`;
+    }).join(' ');
+  }
+  let html = `<table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:var(--blue-light);">
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">#</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">เลขที่</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">วันที่</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">ลูกค้า</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">เครื่อง/รุ่น</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">ประเภทบริการ</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">ช่าง</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">ความพึงพอใจ</th>
+      <th style="padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;white-space:nowrap;">การดำเนินการ</th>
+    </tr></thead><tbody>`;
+  let lastGroup = '';
+  pageData.forEach((r, i) => {
+    const globalIdx = start + i;
+    let groupKey = '';
+    if (mode === 'month' || mode === 'year') {
+      const d = r[2] ? new Date(r[2]) : null;
+      if (d) {
+        const first = new Date(d.getFullYear(), d.getMonth(), 1);
+        const wk = Math.ceil((d.getDate() + ((first.getDay()+6)%7)) / 7);
+        groupKey = mode === 'month' ? `สัปดาห์ที่ ${wk}` : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      }
+    }
+    if (groupKey && groupKey !== lastGroup) {
+      html += `<tr><td colspan="9" style="background:#f5f7ff;font-weight:700;color:var(--blue);font-size:12px;text-transform:uppercase;padding:6px 14px;">${groupKey}</td></tr>`;
+      lastGroup = groupKey;
+    }
+    const rval = r[17]||'';
+    const rc = rmap[rval]||'';
+    const ratingHtml = rval ? `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;color:${rc};">${rval}</span>` : '—';
+    const dateStr = shFormatDate(r[2]);
+    html += `<tr style="border-bottom:1px solid #f0f0f0;" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
+      <td style="padding:10px 14px;font-size:13.5px;">${globalIdx+1}</td>
+      <td style="padding:10px 14px;font-size:13.5px;"><strong>${r[1]||'—'}</strong></td>
+      <td style="padding:10px 14px;font-size:13.5px;">${dateStr}</td>
+      <td style="padding:10px 14px;font-size:13.5px;">${r[3]||'—'}</td>
+      <td style="padding:10px 14px;font-size:13.5px;">${r[7]||'—'}</td>
+      <td style="padding:10px 14px;font-size:13.5px;">${visitBadges(r[11])||'—'}</td>
+      <td style="padding:10px 14px;font-size:13.5px;">${r[18]||'—'}</td>
+      <td style="padding:10px 14px;font-size:13.5px;">${ratingHtml}</td>
+      <td style="padding:10px 14px;font-size:13.5px;display:flex;gap:6px;align-items:center;">
+        <button style="padding:5px 12px;border-radius:6px;border:none;background:var(--blue-mid);color:white;font-family:inherit;font-size:13px;cursor:pointer;" onclick="shOpenDetail(${globalIdx})">ดู / พิมพ์</button>
+        ${(()=>{ const sess=getSession(); return sess && sess.role==='admin' ? `<button style="padding:5px 10px;border-radius:6px;border:none;background:#fee2e2;color:#b91c1c;font-family:inherit;font-size:13px;cursor:pointer;font-weight:600;" onclick="shDeleteRow(event,${globalIdx})">🗑 ลบ</button>` : ''; })()}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('shTableBody').innerHTML = html;
+  // pagination
+  const pag = document.getElementById('shPagination');
+  pag.style.display = 'flex';
+  let pagHtml = `<div style="font-size:13px;color:var(--muted);">แสดง ${start+1}–${Math.min(start+SH_PER_PAGE,shFiltered.length)} จาก ${shFiltered.length} รายการ</div><div style="display:flex;gap:6px;">`;
+  for (let p=1;p<=totalPages;p++) {
+    if (totalPages > 7 && p > 2 && p < totalPages-1 && Math.abs(p-shCurrentPage) > 1) {
+      if (p === 3 || p === totalPages-2) pagHtml += `<button style="width:34px;height:34px;border-radius:6px;border:1.5px solid var(--border);background:white;cursor:default;font-size:13px;font-family:inherit;" disabled>…</button>`;
+      continue;
+    }
+    const active = p===shCurrentPage;
+    pagHtml += `<button style="width:34px;height:34px;border-radius:6px;border:1.5px solid ${active?'var(--blue)':'var(--border)'};background:${active?'var(--blue)':'white'};color:${active?'white':'inherit'};cursor:pointer;font-size:13px;font-family:inherit;" onclick="shGoPage(${p})">${p}</button>`;
+  }
+  pagHtml += '</div>';
+  pag.innerHTML = pagHtml;
+}
+
+function shGoPage(p) { shCurrentPage=p; shRenderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function shFormatDate(d) {
+  if (!d) return '—';
+  const p = d.split('-');
+  if (p.length !== 3) return d;
+  return `${p[2]}/${p[1]}/${parseInt(p[0])+543}`;
+}
+
+function shOpenDetail(idx) {
+  shCurrentRow = shFiltered[idx];
+  const r = shCurrentRow;
+  document.getElementById('shModalTitle').textContent = `ใบงานเลขที่ ${r[1]||'—'}`;
+  const rmap = {'ยอดเยี่ยม':'#1b5e20;background:#e8f5e9','ดี':'#0d47a1;background:#e3f2fd','พอใช้':'#e65100;background:#fff8e1','ควรปรับปรุง':'#b71c1c;background:#ffebee'};
+  const rval = r[17]||'';
+  const rc = rmap[rval]||'';
+  function visitBadges(str) {
+    return (str||'').split(',').map(v=>v.trim()).filter(Boolean).map(v=>{
+      const c = v.includes('เรียก')?'#0d47a1;background:#e3f2fd':v.includes('PM')?'#1b5e20;background:#e8f5e9':v.includes('สาธิต')?'#e65100;background:#fff8e1':'#4a148c;background:#f3e5f5';
+      return `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;color:${c};">${v}</span>`;
+    }).join(' ');
+  }
+  document.getElementById('shModalBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">เลขที่</label><div style="font-size:14px;">${r[1]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">วันที่</label><div style="font-size:14px;">${shFormatDate(r[2])}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ลูกค้า</label><div style="font-size:14px;">${r[3]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ผู้ติดต่อ</label><div style="font-size:14px;">${r[4]||'—'}</div></div>
+      <div style="grid-column:1/-1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ที่อยู่</label><div style="font-size:14px;">${r[5]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">โทรศัพท์</label><div style="font-size:14px;">${r[6]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">เครื่อง/รุ่น</label><div style="font-size:14px;">${r[7]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">จำนวน</label><div style="font-size:14px;">${r[8]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Serial No.</label><div style="font-size:14px;">${r[10]||'—'}</div></div>
+      <div style="grid-column:1/-1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ประเภทบริการ</label><div style="font-size:14px;">${visitBadges(r[11])||'—'}</div></div>
+      <div style="grid-column:1/-1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">อาการเสีย</label><div style="font-size:14px;line-height:1.5;">${r[13]||'—'}</div></div>
+      <div style="grid-column:1/-1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">สาเหตุ / วิธีแก้ไข</label><div style="font-size:14px;line-height:1.5;">${r[14]||'—'}</div></div>
+      <div style="grid-column:1/-1;"><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">หมายเหตุ</label><div style="font-size:14px;line-height:1.5;">${r[15]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ค่าบริการ</label><div style="font-size:14px;">${r[16]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ความพึงพอใจ</label><div style="font-size:14px;">${rval ? `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;color:${rc};">${rval}</span>` : '—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ช่างผู้ให้บริการ</label><div style="font-size:14px;">${r[18]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">ผู้รับบริการ</label><div style="font-size:14px;">${r[19]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">เวลาเริ่มงาน</label><div style="font-size:14px;">${r[20]||'—'}</div></div>
+      <div><label style="display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">เวลาเสร็จงาน</label><div style="font-size:14px;">${r[21]||'—'}</div></div>
+    </div>`;
+  // แสดงปุ่มลบเฉพาะ Admin
+  const delBtn = document.getElementById('shModalDeleteBtn');
+  if (delBtn) {
+    const sess = getSession();
+    delBtn.style.display = (sess && sess.role === 'admin') ? '' : 'none';
+  }
+  document.getElementById('shModalOverlay').style.display = 'flex';
+}
+
+function shCloseModal(e) {
+  if (e.target === document.getElementById('shModalOverlay'))
+    document.getElementById('shModalOverlay').style.display = 'none';
+}
+
+function shDeleteFromModal() {
+  if (!shCurrentRow) return;
+  const r = shCurrentRow;
+  const label = r[1] ? `เลขที่ ${r[1]}` : `ลูกค้า: ${r[3]||'(ไม่ระบุ)'}`;
+  if (!confirm(`⚠️ ยืนยันการลบใบงาน\n\n${label}\nวันที่: ${shFormatDate(r[2])}\nลูกค้า: ${r[3]||'—'}\n\nการลบนี้ไม่สามารถกู้คืนได้!`)) return;
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    shDeleteRowLegacy(r, null);
+    return;
+  }
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'deleteRow', sheetId: SHEET_ID, rowIndex: r._origRowIndex })
+  }).then(res => res.json()).then(result => {
+    if (result.error) throw new Error(result.error);
+    alert('✅ ลบรายการเรียบร้อยแล้ว');
+    document.getElementById('shModalOverlay').style.display = 'none';
+    shLoadData();
+  }).catch(err => alert('❌ เกิดข้อผิดพลาด: ' + err.message));
+}
+
+function shPrintModal() {
+  if (!shCurrentRow) return;
+  const r = shCurrentRow;
+  const params = new URLSearchParams({
+    no:r[1]||'', date:r[2]||'', customer:r[3]||'', contact:r[4]||'',
+    address:r[5]||'', tel:r[6]||'', machine:r[7]||'', qty:r[8]||'',
+    insdate:r[9]||'', serial:r[10]||'', visits:r[11]||'', visit_other:r[12]||'',
+    trouble:r[13]||'', cause:r[14]||'', remark:r[15]||'',
+    charge:r[16]||'', rating:r[17]||'', techsign:r[18]||'',
+    cussign:r[19]||'', arrival:r[20]||'', jobdone:r[21]||'', autoprint:'1'
+  });
+  // เปิดในหน้าเดิม ไม่ต้องเปิด window ใหม่ เพราะอยู่ในไฟล์เดียวกันแล้ว
+  const shModal = document.getElementById('shModalOverlay');
+  shModal.style.display = 'none';
+  // fill form and print
+  const fields = ['no','date','customer','contact','address','tel','machine','qty','insdate','serial','visit_other','trouble','cause','remark','arrival','jobdone','cussign'];
+  fields.forEach(f => {
+    const el = document.getElementById('f_' + f);
+    if (el && params.has(f)) el.value = params.get(f);
+  });
+  const techEl = document.getElementById('f_techsign');
+  if (techEl && params.has('techsign')) {
+    const techVal = params.get('techsign');
+    if (techVal && !Array.from(techEl.options).some(o => o.value === techVal)) {
+      const opt = document.createElement('option');
+      opt.value = techVal; opt.textContent = techVal;
+      techEl.appendChild(opt);
+    }
+    techEl.value = techVal;
+  }
+  if (params.has('visits')) {
+    const visitsRaw = params.get('visits');
+    const visitMap = { 'เรียกซ่อม':'service', 'PM':'pm', 'สาธิต/ติดตั้ง':'demo', 'อื่นๆ':'other' };
+    document.querySelectorAll('input[name="visit"]').forEach(cb => {
+      const active = visitsRaw.split(',').some(v => visitMap[v.trim()] === cb.value);
+      cb.checked = active;
+      const lbl = cb.closest('label');
+      if (lbl) lbl.classList.toggle('active', active);
+    });
+  }
+  if (params.has('charge')) {
+    const chargeMap = { 'คิดค่าบริการ':'paid', 'ไม่คิดค่าบริการ':'free', 'ระยะรับประกัน':'warranty', 'ระยะสัญญาบำรุง':'maintenance' };
+    const chargeVal = chargeMap[params.get('charge')] || '';
+    document.querySelectorAll('input[name="charge"]').forEach(rb => { rb.checked = rb.value === chargeVal; });
+  }
+  if (params.has('rating')) {
+    const ratingMap = { 'ยอดเยี่ยม':'4', 'ดี':'3', 'พอใช้':'2', 'ควรปรับปรุง':'1' };
+    const ratingVal = ratingMap[params.get('rating')] || '';
+    document.querySelectorAll('input[name="rating"]').forEach(rb => {
+      rb.checked = rb.value === ratingVal;
+      const item = rb.closest('.rating-item');
+      if (item) {
+        item.classList.remove('selected-1','selected-2','selected-3','selected-4');
+        if (rb.checked && ratingVal) item.classList.add('selected-'+ratingVal);
+      }
+    });
+  }
+  dataSaved = true; updateSaveUI();
+  showPage('form');
+  setTimeout(() => printReport('print'), 600);
+}
+
+// ===========================
+// DELETE ROW FROM SHEETS
+// ===========================
+async function shDeleteRow(e, idx) {
+  if (e) e.stopPropagation();
+  const r = shFiltered[idx];
+  if (!r) return;
+  const label = r[1] ? `เลขที่ ${r[1]}` : `ลูกค้า: ${r[3]||'(ไม่ระบุ)'}`;
+  if (!confirm(`⚠️ ยืนยันการลบใบงาน\n\n${label}\nวันที่: ${shFormatDate(r[2])}\nลูกค้า: ${r[3]||'—'}\n\nการลบนี้ไม่สามารถกู้คืนได้!`)) return;
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    return shDeleteRowLegacy(r, idx);
+  }
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'deleteRow',
+        sheetId: SHEET_ID,
+        rowIndex: r._origRowIndex
+      })
+    });
+    const result = await resp.json();
+    if (result.error) throw new Error(result.error);
+    alert('✅ ลบรายการเรียบร้อยแล้ว');
+    const modal = document.getElementById('shModalOverlay');
+    if (modal) modal.style.display = 'none';
+    shLoadData();
+  } catch(err) {
+    alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+  }
+}
+
+async function shDeleteRowLegacy(r, idx) {
+  try {
+    const token = await getAccessToken();
+    const metaResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`, {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    const meta = await metaResp.json();
+    const sheet = (meta.sheets || []).find(s => s.properties.title === 'Sheet1');
+    if (!sheet) throw new Error('ไม่พบ Sheet1');
+    const sheetId = sheet.properties.sheetId;
+    const rowIdx = r._origRowIndex - 1;
+    const deleteResp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          deleteDimension: {
+            range: {
+              sheetId: sheetId,
+              dimension: 'ROWS',
+              startIndex: rowIdx,
+              endIndex: rowIdx + 1
+            }
+          }
+        }]
+      })
+    });
+    if (!deleteResp.ok) {
+      const err = await deleteResp.json();
+      throw new Error(err.error?.message || 'ลบไม่สำเร็จ');
+    }
+    alert('✅ ลบรายการเรียบร้อยแล้ว');
+    const modal = document.getElementById('shModalOverlay');
+    if (modal) modal.style.display = 'none';
+    shLoadData();
+  } catch(err) {
+    alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+  }
+}
+
+function shExportCSV() {
+  if (!shFiltered.length) { alert('ไม่มีข้อมูลที่จะ export'); return; }
+  const headers = ['บันทึกเมื่อ','เลขที่','วันที่','ลูกค้า','ผู้ติดต่อ','ที่อยู่','โทรศัพท์','เครื่อง/รุ่น','จำนวน','วันติดตั้ง','Serial No.','ประเภทบริการ','อื่นๆ','อาการเสีย','สาเหตุ/แก้ไข','หมายเหตุ','ค่าบริการ','ความพึงพอใจ','ช่าง','ลูกค้า(ลงชื่อ)','เวลาเริ่ม','เวลาเสร็จ'];
+  const csv = [headers, ...shFiltered].map(r => r.map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `OGA_ServiceReport_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+
+const AUTH_KEY = 'oga_auth_session';
+const USERS_CACHE_KEY = 'oga_users_cache';
+
+// Hash function (simple but adequate for Apps Script-based auth)
+function hashPass(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash |= 0;
+  }
+  return 'h' + Math.abs(hash).toString(36) + str.length.toString(36);
+}
+
+// ===== USERS: ดึงจาก Apps Script (Google Sheets) =====
+async function fetchUsersFromSheet() {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    // Fallback: ใช้ localStorage ถ้ายังไม่ได้ตั้ง Apps Script
+    try { return JSON.parse(localStorage.getItem(USERS_CACHE_KEY) || 'null'); } catch(e) { return null; }
+  }
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getUsers' })
+    });
+    const result = await resp.json();
+    if (result.users) {
+      // Cache ไว้ใน localStorage เผื่อ offline ชั่วคราว
+      localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(result.users));
+      return result.users;
+    }
+    return null;
+  } catch(e) {
+    console.warn('fetchUsersFromSheet failed, using cache', e);
+    try { return JSON.parse(localStorage.getItem(USERS_CACHE_KEY) || 'null'); } catch(e2) { return null; }
+  }
+}
+
+async function pushUsersToSheet(users) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(users));
+    return;
+  }
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'saveUsers', users })
+    });
+    localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(users));
+  } catch(e) {
+    console.warn('pushUsersToSheet failed', e);
+    localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(users));
+  }
+}
+
+function getCachedUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_CACHE_KEY) || 'null'); } catch(e) { return null; }
+}
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(AUTH_KEY) || 'null'); } catch(e) { return null; }
+}
+
+function setSession(user) {
+  sessionStorage.setItem(AUTH_KEY, JSON.stringify(user));
+}
+
+function clearSession() {
+  sessionStorage.removeItem(AUTH_KEY);
+}
+
+// ===== LOGIN (async) =====
+async function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  const btn = document.querySelector('#loginOverlay .auth-btn');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'; return; }
+
+  // แสดง loading
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังตรวจสอบ...'; }
+
+  try {
+    // ดึง users จาก Sheets ก่อนเสมอ
+    let users = await fetchUsersFromSheet();
+
+    // ถ้าดึงไม่ได้เลย (ครั้งแรก ยังไม่มี cache) ให้สร้าง Admin เริ่มต้น
+    if (!users || users.length === 0) {
+      users = [
+        { username: 'Admin', display: 'ผู้ดูแลระบบ', passHash: hashPass('9BXvuf33###'), role: 'admin', active: true }
+      ];
+      await pushUsersToSheet(users);
+    }
+
+    const found = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.passHash === hashPass(p));
+    if (!found) { err.textContent = '❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
+    if (!found.active) { err.textContent = '⛔ บัญชีนี้ถูกระงับการใช้งาน'; return; }
+
+    setSession({ username: found.username, display: found.display, role: found.role });
+    document.getElementById('loginOverlay').classList.remove('show');
+    document.getElementById('loginPass').value = '';
+    onLoginSuccess(found);
+    renderDraftBar();
+    draftStartAutoSave();
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔓 เข้าสู่ระบบ'; }
+  }
+}
+
+function onLoginSuccess(user) {
+  document.getElementById('userChip').style.display = 'flex';
+  document.getElementById('chipName').textContent = user.display || user.username;
+  document.getElementById('chipRole').textContent = user.role === 'admin' ? '🔑 Admin' : '👤 User';
+  // แสดง/ซ่อนปุ่ม Admin-only ทั้งหมด
+  const isAdmin = user.role === 'admin';
+  document.querySelectorAll('.admin-only-btn').forEach(btn => {
+    btn.style.display = isAdmin ? '' : 'none';
+  });
+}
+
+function doLogout() {
+  if (!confirm('ต้องการออกจากระบบ?')) return;
+  clearSession();
+  document.getElementById('userChip').style.display = 'none';
+  // ซ่อนปุ่ม admin-only ทั้งหมดเมื่อ logout
+  document.querySelectorAll('.admin-only-btn').forEach(btn => {
+    btn.style.display = 'none';
+  });
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('loginOverlay').classList.add('show');
+  // กลับไปหน้า form
+  showPage('form');
+  setTimeout(() => document.getElementById('loginUser').focus(), 300);
+}
+
+
+// ===== HISTORY PAGE LOCK =====
+function verifyHistoryLock() {
+  const p = document.getElementById('historyPass').value;
+  const users = getCachedUsers() || [];
+  const admin = users.find(x => x.role === 'admin' && x.username === 'Admin');
+  if (admin && hashPass(p) === admin.passHash) {
+    document.getElementById('historyLockOverlay').classList.remove('show');
+    document.getElementById('historyPass').value = '';
+    showPage('sheetsHistory');
+  } else {
+    document.getElementById('historyLockErr').textContent = '❌ รหัสผ่านไม่ถูกต้อง';
+  }
+}
+
+function hideHistoryLock() {
+  document.getElementById('historyLockOverlay').classList.remove('show');
+  document.getElementById('historyPass').value = '';
+  document.getElementById('historyLockErr').textContent = '';
+}
+
+// ===== USER MANAGER =====
+async function openUserManager() {
+  const sess = getSession();
+  if (!sess || sess.role !== 'admin') { alert('เฉพาะ Admin เท่านั้น'); return; }
+  document.getElementById('umOverlay').classList.add('show');
+  // ดึง users ล่าสุดจาก Sheets ก่อน render
+  await fetchUsersFromSheet();
+  renderUserList();
+}
+
+function closeUserManager() {
+  document.getElementById('umOverlay').classList.remove('show');
+}
+
+function renderUserList() {
+  const users = getCachedUsers() || [];
+  const el = document.getElementById('umUserList');
+  el.innerHTML = users.map((u, i) => {
+    const roleBadge = u.role === 'admin'
+      ? '<span class="um-badge-admin">Admin</span>'
+      : '<span class="um-badge-user">User</span>';
+    const statusBadge = u.active
+      ? ''
+      : '<span class="um-badge-disabled">ระงับ</span>';
+    const isMainAdmin = u.username === 'Admin';
+    const toggleBtn = isMainAdmin ? '' :
+      `<button onclick="toggleUser(${i})" style="padding:5px 12px;border-radius:6px;border:1px solid ${u.active ? '#fcc' : '#c8e6c9'};background:${u.active ? '#fee' : '#e8f5e9'};color:${u.active ? '#c00' : '#2e7d32'};font-family:inherit;font-size:12px;cursor:pointer;">
+        ${u.active ? '⛔ ระงับ' : '✅ เปิด'}
+      </button>`;
+    const delBtn = isMainAdmin ? '' :
+      `<button onclick="deleteUser(${i})" style="padding:5px 10px;border-radius:6px;border:1px solid #fcc;background:#fee;color:#c00;font-family:inherit;font-size:12px;cursor:pointer;">🗑</button>`;
+    return `<div class="um-user-row">
+      <div class="um-user-info">
+        <div class="um-user-name">${u.display || u.username} ${isMainAdmin ? '⭐' : ''}</div>
+        <div class="um-user-role">@${u.username} &nbsp; ${roleBadge} ${statusBadge}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${toggleBtn}
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleUser(i) {
+  const users = getCachedUsers() || [];
+  if (users[i].username === 'Admin') { alert('ไม่สามารถระงับ Admin หลักได้'); return; }
+  users[i].active = !users[i].active;
+  await pushUsersToSheet(users);
+  renderUserList();
+}
+
+async function deleteUser(i) {
+  const users = getCachedUsers() || [];
+  if (users[i].username === 'Admin') { alert('ไม่สามารถลบ Admin หลักได้'); return; }
+  if (!confirm('ลบผู้ใช้ "' + (users[i].display || users[i].username) + '" ?')) return;
+  users.splice(i, 1);
+  await pushUsersToSheet(users);
+  renderUserList();
+}
+
+async function addUser() {
+  const username = document.getElementById('umNewUser').value.trim();
+  const pass = document.getElementById('umNewPass').value;
+  const display = document.getElementById('umNewDisplay').value.trim();
+  const role = document.getElementById('umNewRole').value;
+  const errEl = document.getElementById('umErr');
+  errEl.style.color = '#c62828';
+  errEl.textContent = '';
+  if (!username || !pass) { errEl.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'; return; }
+  if (pass.length < 4) { errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
+  const users = getCachedUsers() || [];
+  if (users.find(x => x.username.toLowerCase() === username.toLowerCase())) {
+    errEl.textContent = 'ชื่อผู้ใช้นี้มีอยู่แล้ว'; return;
+  }
+  users.push({ username, display: display || username, passHash: hashPass(pass), role, active: true });
+  await pushUsersToSheet(users);
+  document.getElementById('umNewUser').value = '';
+  document.getElementById('umNewPass').value = '';
+  document.getElementById('umNewDisplay').value = '';
+  document.getElementById('umNewRole').value = 'user';
+  renderUserList();
+  errEl.style.color = '#2e7d32';
+  errEl.textContent = '✅ เพิ่มผู้ใช้สำเร็จ';
+  setTimeout(() => { errEl.textContent = ''; errEl.style.color = '#c62828'; }, 2500);
+}
+
+// ===== INIT ON LOAD =====
+document.addEventListener('DOMContentLoaded', async function() {
+  // โหลด users จาก Sheets มา cache ไว้ก่อน (background)
+  fetchUsersFromSheet().then(users => {
+    if (!users || users.length === 0) {
+      // สร้าง Admin เริ่มต้นถ้ายังไม่มีเลย
+      const defaultUsers = [
+        { username: 'Admin', display: 'ผู้ดูแลระบบ', passHash: hashPass('9BXvuf33###'), role: 'admin', active: true }
+      ];
+      pushUsersToSheet(defaultUsers);
+    }
+  });
+
+  const sess = getSession();
+  if (sess) {
+    document.getElementById('loginOverlay').classList.remove('show');
+    onLoginSuccess(sess);
+    renderDraftBar();
+    draftStartAutoSave();
+  } else {
+    document.getElementById('loginOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('loginUser').focus(), 300);
+  }
+});
+
+
+// ===========================
+// DRAFT MANAGER
+// ===========================
+
+const DRAFT_KEY_PREFIX = 'oga_draft_';
+const DRAFT_INDEX_PREFIX = 'oga_draft_index_';
+let _currentDraftId = null;
+let _draftAutoSaveTimer = null;
+let _draftBarOpen = true;
+
+function _getDraftUserKey() {
+  const sess = getSession();
+  const user = sess ? sess.username : 'guest';
+  return user;
+}
+
+function _getDraftIndexKey() {
+  return DRAFT_INDEX_PREFIX + _getDraftUserKey();
+}
+
+function _getDraftDataKey(id) {
+  return DRAFT_KEY_PREFIX + _getDraftUserKey() + '_' + id;
+}
+
+function getDraftIndex() {
+  try { return JSON.parse(localStorage.getItem(_getDraftIndexKey()) || '[]'); } catch(e) { return []; }
+}
+
+function saveDraftIndex(arr) {
+  localStorage.setItem(_getDraftIndexKey(), JSON.stringify(arr));
+}
+
+function draftCalcProgress(data) {
+  const fields = ['customer','machine','trouble','serial','contact'];
+  const filled = fields.filter(f => data[f] && data[f].trim()).length;
+  return Math.round((filled / fields.length) * 100);
+}
+
+function draftGetStatus(data, id) {
+  if (_currentDraftId === id) return { cls: 'badge-editing', label: '✏️ กำลังแก้ไข' };
+  const pct = draftCalcProgress(data);
+  if (pct === 100) return { cls: 'badge-ready', label: '✅ พร้อมพิมพ์' };
+  if (pct === 0)   return { cls: 'badge-draft', label: '📄 ร่างเปล่า' };
+  return { cls: 'badge-draft', label: '⏳ กรอกไม่ครบ' };
+}
+
+function draftProgColor(pct) {
+  if (pct === 100) return '#2e7d32';
+  if (pct >= 60)   return '#1565c0';
+  if (pct >= 30)   return '#e65100';
+  return '#bbb';
+}
+
+function renderDraftBar() {
+  const index = getDraftIndex();
+  const countEl = document.getElementById('draftCount');
+  const listEl  = document.getElementById('draftList');
+  const emptyEl = document.getElementById('draftEmpty');
+  if (!countEl) return;
+
+  countEl.textContent = index.length;
+
+  if (!index.length) {
+    emptyEl.style.display = '';
+    listEl.innerHTML = '';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  listEl.innerHTML = index.map(item => {
+    let data = {};
+    try { data = JSON.parse(localStorage.getItem(_getDraftDataKey(item.id)) || '{}'); } catch(e) {}
+    const pct    = draftCalcProgress(data);
+    const status = draftGetStatus(data, item.id);
+    const title  = (data.customer || '(ไม่มีชื่อลูกค้า)') + (data.machine ? ' — ' + data.machine : '');
+    const timeStr= item.savedAt ? new Date(item.savedAt).toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'}) : '';
+    const visitStr = data.visits ? data.visits.join(', ') : '';
+    const isActive = _currentDraftId === item.id;
+
+    return `<div class="draft-item ${isActive ? 'draft-active' : ''}" id="draft-item-${item.id}">
+      <div class="draft-icon">${isActive ? '✏️' : '📄'}</div>
+      <div class="draft-info">
+        <div class="draft-title" title="${title}">${title}</div>
+        <div class="draft-meta">
+          <span>🗓 ${data.date ? formatDate(data.date) : '—'}</span>
+          ${visitStr ? '<span>🔧 ' + visitStr + '</span>' : ''}
+          ${timeStr ? '<span>⏱ บันทึก ' + timeStr + '</span>' : ''}
+          <span class="draft-badge ${status.cls}">${status.label}</span>
+        </div>
+      </div>
+      <div class="draft-progress">
+        <div class="draft-prog-bar"><div class="draft-prog-fill" style="width:${pct}%;background:${draftProgColor(pct)};"></div></div>
+        <span style="font-size:11px;color:var(--muted);min-width:28px;text-align:right;">${pct}%</span>
+      </div>
+      <div class="draft-actions">
+        ${isActive
+          ? `<button class="draft-btn" onclick="draftSaveNow()" title="บันทึก Draft ตอนนี้">&#128190; บันทึก</button>
+             <button class="draft-btn draft-btn-blue" onclick="printReport('print')" title="พิมพ์">&#128438; พิมพ์</button>`
+          : `<button class="draft-btn draft-btn-blue" onclick="draftLoad('${item.id}')" title="โหลดใบงานนี้">&#128221; โหลด</button>
+             <button class="draft-btn" onclick="draftNewFromId('${item.id}')" title="คัดลอกลูกค้า">&#128203; คัดลูกค้า</button>`
+        }
+        <button class="draft-btn draft-btn-del" onclick="draftDelete('${item.id}')" title="ลบ Draft">&#128465; ลบ</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function draftReadForm() {
+  const visits = getChecked('visit').map(visitLabel);
+  return {
+    no:        (document.getElementById('f_no')||{}).value || '',
+    date:      (document.getElementById('f_date')||{}).value || '',
+    customer:  (document.getElementById('f_customer')||{}).value || '',
+    contact:   (document.getElementById('f_contact')||{}).value || '',
+    address:   (document.getElementById('f_address')||{}).value || '',
+    tel:       (document.getElementById('f_tel')||{}).value || '',
+    machine:   (document.getElementById('f_machine')||{}).value || '',
+    qty:       (document.getElementById('f_qty')||{}).value || '',
+    insdate:   (document.getElementById('f_insdate')||{}).value || '',
+    serial:    (document.getElementById('f_serial')||{}).value || '',
+    trouble:   (document.getElementById('f_trouble')||{}).value || '',
+    cause:     (document.getElementById('f_cause')||{}).value || '',
+    remark:    (document.getElementById('f_remark')||{}).value || '',
+    arrival:   (document.getElementById('f_arrival')||{}).value || '',
+    jobdone:   (document.getElementById('f_jobdone')||{}).value || '',
+    techsign:  (document.getElementById('f_techsign')||{}).value || '',
+    cussign:   (document.getElementById('f_cussign')||{}).value || '',
+    visitOther:(document.getElementById('f_visit_other')||{}).value || '',
+    visits:    visits,
+    visitChecked: getChecked('visit'),
+    charge:    getRadio('charge'),
+    rating:    getRadio('rating'),
+  };
+}
+
+function draftFillForm(data) {
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
+  set('f_no',        data.no);
+  set('f_date',      data.date);
+  set('f_customer',  data.customer);
+  set('f_contact',   data.contact);
+  set('f_address',   data.address);
+  set('f_tel',       data.tel);
+  set('f_machine',   data.machine);
+  set('f_qty',       data.qty);
+  set('f_insdate',   data.insdate);
+  set('f_serial',    data.serial);
+  set('f_trouble',   data.trouble);
+  set('f_cause',     data.cause);
+  set('f_remark',    data.remark);
+  set('f_arrival',   data.arrival);
+  set('f_jobdone',   data.jobdone);
+  set('f_visit_other', data.visitOther);
+  set('f_cussign',   data.cussign);
+
+  const techEl = document.getElementById('f_techsign');
+  if (techEl && data.techsign) {
+    if (!Array.from(techEl.options).some(o => o.value === data.techsign)) {
+      const opt = document.createElement('option');
+      opt.value = data.techsign; opt.textContent = data.techsign;
+      techEl.appendChild(opt);
+    }
+    techEl.value = data.techsign;
+  }
+
+  document.querySelectorAll('input[name="visit"]').forEach(cb => {
+    const active = (data.visitChecked || []).includes(cb.value);
+    cb.checked = active;
+    const lbl = cb.closest('label');
+    if (lbl) lbl.classList.toggle('active', active);
+  });
+
+  document.querySelectorAll('input[name="charge"]').forEach(rb => {
+    rb.checked = rb.value === (data.charge || '');
+  });
+
+  document.querySelectorAll('.rating-item').forEach(item => {
+    const inp = item.querySelector('input');
+    if (!inp) return;
+    item.classList.remove('selected-1','selected-2','selected-3','selected-4');
+    if (inp.value === data.rating) item.classList.add('selected-' + data.rating);
+  });
+}
+
+function draftSaveNow(silent) {
+  const sess = getSession();
+  if (!sess) return;
+
+  const data = draftReadForm();
+  const now  = new Date().toISOString();
+
+  if (!_currentDraftId) {
+    _currentDraftId = 'dr_' + Date.now();
+  }
+
+  localStorage.setItem(_getDraftDataKey(_currentDraftId), JSON.stringify(data));
+
+  let index = getDraftIndex();
+  const existing = index.find(x => x.id === _currentDraftId);
+  if (existing) {
+    existing.savedAt = now;
+  } else {
+    index.unshift({ id: _currentDraftId, savedAt: now });
+  }
+  saveDraftIndex(index);
+
+  const label = document.getElementById('draftAutoSaveLabel');
+  if (label) {
+    const t = new Date().toLocaleTimeString('th-TH', {hour:'2-digit',minute:'2-digit'});
+    label.innerHTML = '&#128190; บันทึกแล้ว ' + t;
+    label.classList.add('saved');
+    setTimeout(() => { label.classList.remove('saved'); }, 3000);
+  }
+
+  renderDraftBar();
+  if (!silent) {
+    // Flash ปุ่ม
+    const btns = document.querySelectorAll('.draft-btn-blue');
+    btns.forEach(b => { b.textContent = '✅ บันทึกแล้ว'; setTimeout(() => { b.innerHTML = '&#128190; บันทึก'; }, 1500); });
+  }
+}
+
+function draftLoad(id) {
+  if (_currentDraftId && _currentDraftId !== id) {
+    draftSaveNow(true);
+  }
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem(_getDraftDataKey(id)) || '{}'); } catch(e) {}
+  _currentDraftId = id;
+  draftFillForm(data);
+  renderDraftBar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function draftDelete(id) {
+  if (!confirm('ลบ Draft นี้?')) return;
+  localStorage.removeItem(_getDraftDataKey(id));
+  let index = getDraftIndex();
+  index = index.filter(x => x.id !== id);
+  saveDraftIndex(index);
+  if (_currentDraftId === id) {
+    _currentDraftId = null;
+  }
+  renderDraftBar();
+}
+
+function draftNewFromCustomer() {
+  const current = draftReadForm();
+  if (_currentDraftId) draftSaveNow(true);
+
+  _currentDraftId = 'dr_' + Date.now();
+  const newData = {
+    customer: current.customer,
+    contact:  current.contact,
+    address:  current.address,
+    tel:      current.tel,
+    date:     current.date,
+  };
+  localStorage.setItem(_getDraftDataKey(_currentDraftId), JSON.stringify(newData));
+  let index = getDraftIndex();
+  index.unshift({ id: _currentDraftId, savedAt: new Date().toISOString() });
+  saveDraftIndex(index);
+
+  // ล้างฟอร์ม แต่ยัง keep ข้อมูลลูกค้า
+  resetForm();
+  setTimeout(() => {
+    draftFillForm(newData);
+    renderDraftBar();
+  }, 50);
+}
+
+function draftNewFromId(srcId) {
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem(_getDraftDataKey(srcId)) || '{}'); } catch(e) {}
+  if (_currentDraftId) draftSaveNow(true);
+
+  _currentDraftId = 'dr_' + Date.now();
+  const newData = {
+    customer: data.customer,
+    contact:  data.contact,
+    address:  data.address,
+    tel:      data.tel,
+    date:     data.date,
+  };
+  localStorage.setItem(_getDraftDataKey(_currentDraftId), JSON.stringify(newData));
+  let index = getDraftIndex();
+  index.unshift({ id: _currentDraftId, savedAt: new Date().toISOString() });
+  saveDraftIndex(index);
+
+  resetForm();
+  setTimeout(() => {
+    draftFillForm(newData);
+    renderDraftBar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, 50);
+}
+
+function toggleDraftBar() {
+  _draftBarOpen = !_draftBarOpen;
+  const body = document.getElementById('draftBarBody');
+  const icon = document.getElementById('draftToggleIcon');
+  if (body) body.style.display = _draftBarOpen ? '' : 'none';
+  if (icon) icon.classList.toggle('open', _draftBarOpen);
+}
+
+function draftStartAutoSave() {
+  if (_draftAutoSaveTimer) clearInterval(_draftAutoSaveTimer);
+  _draftAutoSaveTimer = setInterval(() => {
+    const sess = getSession();
+    if (!sess) return;
+    // auto-save เฉพาะถ้ามี draft active หรือมีข้อมูลในฟอร์ม
+    const customer = (document.getElementById('f_customer')||{}).value || '';
+    const machine  = (document.getElementById('f_machine')||{}).value  || '';
+    if (customer || machine || _currentDraftId) {
+      draftSaveNow(true);
+    }
+  }, 30000); // ทุก 30 วิ
+}
+
+// hook เข้า DOMContentLoaded init แทน
+document.addEventListener('DOMContentLoaded', function() {
+  // ถ้า session อยู่แล้ว render draft ทันที
+  setTimeout(() => {
+    const sess = getSession();
+    if (sess) {
+      renderDraftBar();
+      draftStartAutoSave();
+    }
+  }, 200);
+});
+
+</script>
+</body>
+</html>

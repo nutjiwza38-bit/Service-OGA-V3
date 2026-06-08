@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGA — ประวัติใบงานบริการ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --blue:#1a56a0;--blue-light:#e8f0fb;--blue-mid:#2d6fc4;
+    --border:#dde3f0;--text:#1a1a1a;--muted:#666;--accent:#d32f2f;
+    --green:#2e7d32;--orange:#e65100;
+  }
+  body{font-family:'Sarabun',sans-serif;background:#e8eaf0;color:var(--text);}
+
+  /* TOPBAR */
+  .topbar{background:var(--blue);color:white;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .topbar h1{font-size:17px;font-weight:600;}
+  .topbar h1 small{display:block;font-size:12px;font-weight:300;opacity:0.85;}
+  .btn{padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:500;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;}
+  .btn-outline{background:rgba(255,255,255,0.15);color:white;border:1px solid rgba(255,255,255,0.4);}
+  .btn-outline:hover{background:rgba(255,255,255,0.25);}
+  .btn-white{background:white;color:var(--blue);}
+  .btn-white:hover{background:#f0f4ff;}
+  .btn-blue{background:var(--blue-mid);color:white;}
+  .btn-blue:hover{background:#1e5aaa;}
+  .btn-sm{padding:5px 12px;font-size:13px;}
+
+  /* WRAPPER */
+  .wrapper{max-width:1200px;margin:0 auto;padding:24px 20px 60px;}
+
+  /* FILTER BAR */
+  .filter-bar{background:white;border-radius:12px;border:1px solid var(--border);padding:18px 24px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;}
+  .filter-bar .field{display:flex;flex-direction:column;gap:5px;}
+  .filter-bar label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;}
+  .filter-bar input,.filter-bar select{font-family:inherit;font-size:14px;padding:8px 12px;border:1.5px solid #ccc;border-radius:7px;background:#fafafa;outline:none;}
+  .filter-bar input:focus,.filter-bar select:focus{border-color:var(--blue-mid);}
+
+  /* SUMMARY CARDS */
+  .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .summary-card{background:white;border-radius:12px;border:1px solid var(--border);padding:18px 20px;}
+  .summary-card .label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:6px;}
+  .summary-card .value{font-size:28px;font-weight:700;color:var(--blue);}
+  .summary-card .sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  /* TABLE */
+  .table-card{background:white;border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+  .table-header{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .table-header h3{font-size:16px;font-weight:700;color:var(--blue);}
+  table{width:100%;border-collapse:collapse;}
+  thead tr{background:var(--blue-light);}
+  thead th{padding:10px 14px;text-align:left;font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap;}
+  tbody tr{border-bottom:1px solid #f0f0f0;transition:background 0.1s;}
+  tbody tr:hover{background:#f8faff;}
+  tbody td{padding:10px 14px;font-size:13.5px;vertical-align:top;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+  .badge-service{background:#e3f2fd;color:#0d47a1;}
+  .badge-pm{background:#e8f5e9;color:#1b5e20;}
+  .badge-demo{background:#fff8e1;color:#e65100;}
+  .badge-other{background:#f3e5f5;color:#4a148c;}
+  .rating-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+  .r4{background:#e8f5e9;color:#1b5e20;}
+  .r3{background:#e3f2fd;color:#0d47a1;}
+  .r2{background:#fff8e1;color:#e65100;}
+  .r1{background:#ffebee;color:#b71c1c;}
+
+  /* PAGINATION */
+  .pagination{display:flex;align-items:center;gap:8px;padding:16px 24px;border-top:1px solid var(--border);justify-content:space-between;flex-wrap:wrap;}
+  .pagination .info{font-size:13px;color:var(--muted);}
+  .pagination .pages{display:flex;gap:6px;}
+  .page-btn{width:34px;height:34px;border-radius:6px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;font-family:inherit;display:flex;align-items:center;justify-content:center;transition:all 0.1s;}
+  .page-btn:hover{border-color:var(--blue-mid);color:var(--blue);}
+  .page-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+
+  /* LOADING / EMPTY */
+  .loading{text-align:center;padding:60px;color:var(--muted);font-size:15px;}
+  .spinner{width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .empty{text-align:center;padding:60px;color:var(--muted);}
+  .empty-icon{font-size:48px;margin-bottom:12px;}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.show{display:flex;}
+  .modal{background:white;border-radius:14px;width:90%;max-width:680px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+  .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-header h3{font-size:17px;font-weight:700;color:var(--blue);}
+  .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;}
+  .modal-body{padding:20px 24px;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .detail-item label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:3px;}
+  .detail-item .val{font-size:14px;color:var(--text);line-height:1.5;}
+  .detail-item.full{grid-column:1/-1;}
+  .modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+  /* GROUP HEADERS */
+  .group-header td{background:#f5f7ff;font-weight:700;color:var(--blue);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;padding:6px 14px;}
+
+  @media(max-width:700px){
+    .summary-row{grid-template-columns:1fr 1fr;}
+    .detail-grid{grid-template-columns:1fr;}
+  }
+
+  /* HISTORY LOCK OVERLAY — same pattern as statsLockOverlay in index.html */
+  .hist-lock-overlay{display:none;position:fixed;inset:0;background:rgba(10,30,70,0.72);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+  .hist-lock-overlay.show{display:flex;}
+  .hist-lock-box{background:white;border-radius:16px;padding:36px 40px;width:90%;max-width:360px;box-shadow:0 24px 60px rgba(0,0,0,0.3);text-align:center;}
+  .hist-lock-box .lock-icon{font-size:44px;margin-bottom:10px;}
+  .hist-lock-box h2{font-size:18px;font-weight:700;color:var(--blue);margin-bottom:4px;}
+  .hist-lock-box p{font-size:13px;color:var(--muted);margin-bottom:20px;}
+  .hist-lock-box input{width:100%;font-family:inherit;font-size:15px;padding:10px 14px;border:1.5px solid #ccc;border-radius:8px;outline:none;text-align:center;letter-spacing:2px;margin-bottom:10px;}
+  .hist-lock-box input:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(45,111,196,0.12);}
+  .hist-lock-err{font-size:13px;color:var(--accent);min-height:18px;margin-bottom:12px;}
+  .btn-unlock{width:100%;padding:11px;background:var(--blue);color:white;border:none;border-radius:8px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.15s;}
+  .btn-unlock:hover{background:var(--blue-mid);}
+  .lock-back{display:block;margin-top:14px;font-size:13px;color:var(--blue-mid);text-decoration:none;}
+  .lock-back:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<!-- HISTORY LOCK OVERLAY -->
+<div class="hist-lock-overlay show" id="histLockOverlay">
+  <div class="hist-lock-box">
+    <div class="lock-icon">🔐</div>
+    <h2>ประวัติใบงาน</h2>
+    <p>หน้านี้สำหรับผู้ดูแลระบบเท่านั้น<br>กรุณากรอกรหัสผ่าน Admin</p>
+    <input type="password" id="histLockPass" placeholder="รหัสผ่าน Admin"
+      onkeydown="if(event.key==='Enter') verifyHistLock()">
+    <div class="hist-lock-err" id="histLockErr"></div>
+    <button class="btn-unlock" onclick="verifyHistLock()">🔓 เข้าสู่หน้าประวัติ</button>
+    <a href="index.html" class="lock-back">← กลับหน้ากรอกใบงาน</a>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>ประวัติใบงานบริการ <small>OGA Service History</small></h1>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <button class="btn btn-outline btn-sm" onclick="loadData()">&#8635; รีเฟรช</button>
+    <a href="index.html" class="btn btn-white btn-sm">&#128196; กรอกใบงาน</a>
+  </div>
+</div>
+
+<div class="wrapper">
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="field">
+      <label>มุมมอง</label>
+      <select id="viewMode" onchange="applyFilter()">
+        <option value="all">ทั้งหมด</option>
+        <option value="day">รายวัน</option>
+        <option value="week">รายสัปดาห์</option>
+        <option value="month">รายเดือน</option>
+        <option value="year">รายปี</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>วันที่เริ่ม</label>
+      <input type="date" id="dateFrom" onchange="applyFilter()">
+    </div>
+    <div class="field">
+      <label>วันที่สิ้นสุด</label>
+      <input type="date" id="dateTo" onchange="applyFilter()">
+    </div>
+    <div class="field">
+      <label>ค้นหา</label>
+      <input type="text" id="searchQ" placeholder="ลูกค้า / เลขที่ / เครื่อง..." oninput="applyFilter()" style="min-width:200px;">
+    </div>
+    <button class="btn btn-blue" onclick="clearFilter()">&#10005; ล้างตัวกรอง</button>
+  </div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="label">ทั้งหมด</div>
+      <div class="value" id="sumTotal">—</div>
+      <div class="sub">ใบงาน</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">ในช่วงที่เลือก</div>
+      <div class="value" id="sumFiltered">—</div>
+      <div class="sub">ใบงาน</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">เรียกซ่อม</div>
+      <div class="value" id="sumService">—</div>
+      <div class="sub">ครั้ง</div>
+    </div>
+    <div class="summary-card">
+      <div class="label">ความพึงพอใจ ⭐</div>
+      <div class="value" id="sumRating">—</div>
+      <div class="sub">คะแนนเฉลี่ย</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-card">
+    <div class="table-header">
+      <h3 id="tableTitle">&#128203; รายการใบงาน</h3>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" style="color:var(--blue);background:#e8f0fb;border-color:var(--blue-mid);" onclick="exportCSV()">&#128229; Export CSV</button>
+      </div>
+    </div>
+    <div id="tableBody">
+      <div class="loading"><div class="spinner"></div>กำลังโหลดข้อมูล...</div>
+    </div>
+    <div class="pagination" id="pagination" style="display:none;"></div>
+  </div>
+
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">รายละเอียดใบงาน</h3>
+      <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('show')">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" style="color:#333;border-color:#ccc;" onclick="document.getElementById('modalOverlay').classList.remove('show')">ปิด</button>
+      <button class="btn btn-blue" onclick="printModal()">&#128438; พิมพ์ใบงานนี้</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_ID = '1bPTtKd9cvaFQNKQorvQJi2Um1jjmPW9jIZkyNKK9y7w';
+const SERVICE_ACCOUNT_EMAIL = 'oga-service@alert-weaver-498409-u7.iam.gserviceaccount.com';
+const PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCz3iffEMYGZ0GQ\nIbUWhAB5u1t3RgOytDscVtV7xX44HP2aWAgbZrbJr9EqHHpp9tHz4A5mKgDXthId\nBJMlS9Edib1PWwdEr9r6OgnEFYjzwNcp79qNKl5IFaeDPzNyW+bcge9MtCeoSnPT\nkBxRh+6Ub/nIhtJyDmz2Y/pgz4mAohbS7rMYhzlWixX/ODZt8j45RTarPyLLiAiM\nd20nKjqdB8m4GIIcrE18hu4H9DUPTTONZO7toiQc2T4PsW/en5QOsHEJGQHecGq/\nMyP5cYjoNBuVuHZ8LXnox6xQ9Bunnv/HLp572si8AzBvsjr+91PGBadjiS7RpJcy\nXyESfDQzAgMBAAECggEADwZfOUR67j0A3ovaRyu2qHSMou1/0JU6nNbqFWE9dm2B\nh7uTzcoqObXMmKJxXVmnVyJfwYv/rwVABRmFOyfWq4t+e1sEw+mWtrFTcIRGAOqa\nbp/hF0qzPn1ElXOZlhN0OPZHqZYg++9gNouCuhLLTK3/5Q7SFIH8+yYF28FqYIrF\npNBXjLEYlsKc2t8w5WXQmZsSWRF4OuEGWEQYsk0+oDEchh1VCKNnZw1AdzYjrdPD\nR4aNDV9AgZrdFZ3tn65CWCQyaRyFJt3Dc1rJuiuP4IoOMCzwZZr1mhW0O89xXjAk\nXheiBs17KNadg1qsEmaM/lX2BOFib5K51s9qZhgrMQKBgQDuo6m4Makj1BJ59Vhg\n0nT/17hxXqEp9F5BdPgZWoDzf59PUBaFExEX2naSkvXUz1DD4xuTZoPdXWDFLk/m\nsC8oK+tJbN9d/XnWHQXtm7rTirm3/pvXdaNNR0j9Log6bmJvNtChmXB3kLt4RvNS\n+RT2Vr2ATFWYE3Y02TxsVlhAcQKBgQDA8/PCqysujryerm240jDzfri0vSizo7B9\nQ5LUNqCVWeJOoFD2g/xtJFYaM7VomTwNH6T2Dqr3YCzZSB35/YIGuGbPNxTlZeOO\nkoAGReXvpkpCkLkJnjhIr6ZG4JhjnTDBL4u9OHsbQrf0q8PR4K3bHRNvXn6+kBzg\nNQXv+3QQ4wKBgQCtqCWaZ3EJJItpepOcqaoAf6+1uEIZcL2ibocYlBagm2+H3OT2\nY+CddhmxIgaInXDNi5gGlKRC02/XLZNxcSZv2j33CaYmFI2ztR0aQqgaxqnNbhdk\nHDQAyW4g59q0gp1ZBw+deTYxm/4AUclByQZrGMX/9gyXhRoQ7UCeKdtA0QKBgATL\ny4pSMN+WYq/bDBUk/FyBENxFO2bDsdZbQKIPvYwY0Nw9deW6wCKCXbWHBYJVFL4K\nxFHtaWh+tn6sITqeh4XdPYj3CIjvMGnR0GbXg/CiBISFDmRjz2hXHV3zpTYMqTKU\nGPgaGE1EKkhloJdt60RgA6SoB6R69ozIJJ6jdG4bAoGAY3vADS3lZDnDDfExb2jD\nUnI7Rn0D5pNgmrA64ns8l91bTX5wezHwCooaDnewrkwUBv9r7rnSYWrvP0BCJY27\nSjAVynCgjHr/mLn+N3W3bM69+dz5gWRmK3hOzURLp0uKAL+8cOC8enyXOTAC/0iV\ng+PDJ0L5GrlYbKF4obOjwlM=\n-----END PRIVATE KEY-----`;
+
+// Columns: 0=บันทึกเมื่อ,1=เลขที่,2=วันที่,3=ลูกค้า,4=ผู้ติดต่อ,5=ที่อยู่,6=โทรศัพท์
+//          7=เครื่อง,8=จำนวน,9=วันติดตั้ง,10=Serial,11=ประเภทบริการ,12=อื่นๆ
+//          13=อาการเสีย,14=สาเหตุ,15=หมายเหตุ,16=ค่าบริการ,17=ความพึงพอใจ
+//          18=ช่าง,19=ลูกค้า(ลงชื่อ),20=เวลาเริ่ม,21=เวลาเสร็จ
+
+let allData = [];
+let filtered = [];
+let currentPage = 1;
+const PER_PAGE = 20;
+let currentRow = null;
+
+async function getAccessToken() {
+  const header = { alg:'RS256', typ:'JWT' };
+  const now = Math.floor(Date.now()/1000);
+  const claim = { iss:SERVICE_ACCOUNT_EMAIL, scope:'https://www.googleapis.com/auth/spreadsheets.readonly', aud:'https://oauth2.googleapis.com/token', exp:now+3600, iat:now };
+  function b64(obj){ return btoa(unescape(encodeURIComponent(JSON.stringify(obj)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+  const unsigned = b64(header)+'.'+b64(claim);
+  const pemBody = PRIVATE_KEY.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g,'');
+  const binaryKey = Uint8Array.from(atob(pemBody),c=>c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey('pkcs8',binaryKey.buffer,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5',cryptoKey,new TextEncoder().encode(unsigned));
+  const jwt = unsigned+'.'+btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  const resp = await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`});
+  const data = await resp.json();
+  return data.access_token;
+}
+
+async function loadData() {
+  document.getElementById('tableBody').innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลดข้อมูล...</div>';
+  document.getElementById('pagination').style.display = 'none';
+  try {
+    const token = await getAccessToken();
+    const resp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1`,{headers:{Authorization:'Bearer '+token}});
+    const data = await resp.json();
+    const rows = data.values || [];
+    // skip header row
+    allData = rows.slice(1).filter(r => r && r.length > 1).reverse(); // newest first
+    document.getElementById('sumTotal').textContent = allData.length;
+    applyFilter();
+  } catch(e) {
+    document.getElementById('tableBody').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><p>โหลดข้อมูลไม่สำเร็จ<br><small>${e.message}</small></p></div>`;
+  }
+}
+
+function getDateRange(mode) {
+  const now = new Date();
+  let from, to;
+  if (mode === 'day') {
+    from = to = now.toISOString().split('T')[0];
+  } else if (mode === 'week') {
+    const day = now.getDay();
+    const mon = new Date(now); mon.setDate(now.getDate() - ((day+6)%7));
+    const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+    from = mon.toISOString().split('T')[0];
+    to   = sun.toISOString().split('T')[0];
+  } else if (mode === 'month') {
+    from = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+    to   = now.toISOString().split('T')[0];
+  } else if (mode === 'year') {
+    from = `${now.getFullYear()}-01-01`;
+    to   = now.toISOString().split('T')[0];
+  }
+  return { from, to };
+}
+
+function applyFilter() {
+  const mode = document.getElementById('viewMode').value;
+  let dateFrom = document.getElementById('dateFrom').value;
+  let dateTo   = document.getElementById('dateTo').value;
+  const q = document.getElementById('searchQ').value.toLowerCase();
+
+  if (mode !== 'all') {
+    const range = getDateRange(mode);
+    dateFrom = range.from; dateTo = range.to;
+    document.getElementById('dateFrom').value = dateFrom;
+    document.getElementById('dateTo').value   = dateTo;
+  }
+
+  filtered = allData.filter(r => {
+    const rowDate = r[2] || ''; // f_date column
+    if (dateFrom && rowDate < dateFrom) return false;
+    if (dateTo   && rowDate > dateTo)   return false;
+    if (q) {
+      const hay = [r[1],r[3],r[4],r[7],r[10],r[11]].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  // summary
+  document.getElementById('sumFiltered').textContent = filtered.length;
+  const svc = filtered.filter(r=>(r[11]||'').includes('เรียกซ่อม')).length;
+  document.getElementById('sumService').textContent = svc;
+  const ratings = filtered.map(r=>parseInt(r[17])||0).filter(v=>v>0);
+  const avg = ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1) : '—';
+  document.getElementById('sumRating').textContent = avg;
+
+  // title
+  const modeLabel = {all:'ทั้งหมด',day:'วันนี้',week:'สัปดาห์นี้',month:'เดือนนี้',year:'ปีนี้'};
+  document.getElementById('tableTitle').textContent = `📋 รายการใบงาน — ${modeLabel[mode]||''}`;
+
+  currentPage = 1;
+  renderTable();
+}
+
+function clearFilter() {
+  document.getElementById('viewMode').value = 'all';
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value   = '';
+  document.getElementById('searchQ').value  = '';
+  applyFilter();
+}
+
+function renderTable() {
+  if (!filtered.length) {
+    document.getElementById('tableBody').innerHTML = '<div class="empty"><div class="empty-icon">📭</div><p>ไม่พบข้อมูลในช่วงที่เลือก</p></div>';
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+  const totalPages = Math.ceil(filtered.length / PER_PAGE);
+  const start = (currentPage-1)*PER_PAGE;
+  const pageData = filtered.slice(start, start+PER_PAGE);
+
+  const mode = document.getElementById('viewMode').value;
+  let html = '<table><thead><tr><th>#</th><th>เลขที่</th><th>วันที่</th><th>ลูกค้า</th><th>เครื่อง/รุ่น</th><th>ประเภทบริการ</th><th>ช่าง</th><th>ความพึงพอใจ</th><th>การดำเนินการ</th></tr></thead><tbody>';
+
+  let lastGroup = '';
+  pageData.forEach((r, i) => {
+    const globalIdx = start + i;
+    // group header
+    let groupKey = '';
+    if (mode === 'month' || mode === 'year') {
+      const d = r[2] ? new Date(r[2]) : null;
+      if (d) groupKey = mode === 'month' ? `สัปดาห์ที่ ${getWeekOfMonth(d)}` : `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
+    if (groupKey && groupKey !== lastGroup) {
+      html += `<tr class="group-header"><td colspan="9">${groupKey}</td></tr>`;
+      lastGroup = groupKey;
+    }
+
+    const visitBadges = (r[11]||'').split(',').map(v=>v.trim()).filter(Boolean).map(v=>{
+      const cls = v.includes('เรียก')?'badge-service':v.includes('PM')?'badge-pm':v.includes('สาธิต')?'badge-demo':'badge-other';
+      return `<span class="badge ${cls}">${v}</span>`;
+    }).join(' ');
+
+    const rmap = {'ยอดเยี่ยม':'r4','ดี':'r3','พอใช้':'r2','ควรปรับปรุง':'r1'};
+    const rval = r[17]||'';
+    const ratingHtml = rval ? `<span class="rating-pill ${rmap[rval]||''}">${rval}</span>` : '—';
+
+    const dateStr = formatDate(r[2]);
+    html += `<tr>
+      <td>${globalIdx+1}</td>
+      <td><strong>${r[1]||'—'}</strong></td>
+      <td>${dateStr}</td>
+      <td>${r[3]||'—'}</td>
+      <td>${r[7]||'—'}</td>
+      <td>${visitBadges||'—'}</td>
+      <td>${r[18]||'—'}</td>
+      <td>${ratingHtml}</td>
+      <td><button class="btn btn-sm btn-blue" onclick="openDetail(${globalIdx})">ดู / พิมพ์</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('tableBody').innerHTML = html;
+
+  // pagination
+  const pag = document.getElementById('pagination');
+  pag.style.display = 'flex';
+  let pagHtml = `<div class="info">แสดง ${start+1}–${Math.min(start+PER_PAGE,filtered.length)} จาก ${filtered.length} รายการ</div><div class="pages">`;
+  for (let p=1;p<=totalPages;p++) {
+    if (totalPages > 7 && p > 2 && p < totalPages-1 && Math.abs(p-currentPage) > 1) {
+      if (p === 3 || p === totalPages-2) pagHtml += `<button class="page-btn" disabled>…</button>`;
+      continue;
+    }
+    pagHtml += `<button class="page-btn${p===currentPage?' active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  pagHtml += '</div>';
+  pag.innerHTML = pagHtml;
+}
+
+function goPage(p) { currentPage=p; renderTable(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function getWeekOfMonth(d) {
+  const first = new Date(d.getFullYear(), d.getMonth(), 1);
+  return Math.ceil((d.getDate() + ((first.getDay()+6)%7)) / 7);
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const p = d.split('-');
+  if (p.length !== 3) return d;
+  return `${p[2]}/${p[1]}/${parseInt(p[0])+543}`;
+}
+
+function openDetail(idx) {
+  currentRow = filtered[idx];
+  const r = currentRow;
+  document.getElementById('modalTitle').textContent = `ใบงานเลขที่ ${r[1]||'—'}`;
+  const visitBadges = (r[11]||'').split(',').map(v=>v.trim()).filter(Boolean).map(v=>{
+    const cls = v.includes('เรียก')?'badge-service':v.includes('PM')?'badge-pm':v.includes('สาธิต')?'badge-demo':'badge-other';
+    return `<span class="badge ${cls}">${v}</span>`;
+  }).join(' ');
+  const rmap = {'ยอดเยี่ยม':'r4','ดี':'r3','พอใช้':'r2','ควรปรับปรุง':'r1'};
+  const rval = r[17]||'';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-item"><label>เลขที่</label><div class="val">${r[1]||'—'}</div></div>
+      <div class="detail-item"><label>วันที่</label><div class="val">${formatDate(r[2])}</div></div>
+      <div class="detail-item"><label>ลูกค้า</label><div class="val">${r[3]||'—'}</div></div>
+      <div class="detail-item"><label>ผู้ติดต่อ</label><div class="val">${r[4]||'—'}</div></div>
+      <div class="detail-item full"><label>ที่อยู่</label><div class="val">${r[5]||'—'}</div></div>
+      <div class="detail-item"><label>โทรศัพท์</label><div class="val">${r[6]||'—'}</div></div>
+      <div class="detail-item"><label>เครื่อง/รุ่น</label><div class="val">${r[7]||'—'}</div></div>
+      <div class="detail-item"><label>จำนวน</label><div class="val">${r[8]||'—'}</div></div>
+      <div class="detail-item"><label>Serial No.</label><div class="val">${r[10]||'—'}</div></div>
+      <div class="detail-item"><label>ประเภทบริการ</label><div class="val">${visitBadges||'—'}</div></div>
+      <div class="detail-item full"><label>อาการเสีย</label><div class="val">${r[13]||'—'}</div></div>
+      <div class="detail-item full"><label>สาเหตุ / วิธีแก้ไข</label><div class="val">${r[14]||'—'}</div></div>
+      <div class="detail-item full"><label>หมายเหตุ</label><div class="val">${r[15]||'—'}</div></div>
+      <div class="detail-item"><label>ค่าบริการ</label><div class="val">${r[16]||'—'}</div></div>
+      <div class="detail-item"><label>ความพึงพอใจ</label><div class="val">${rval ? `<span class="rating-pill ${rmap[rval]||''}">${rval}</span>` : '—'}</div></div>
+      <div class="detail-item"><label>ช่างผู้ให้บริการ</label><div class="val">${r[18]||'—'}</div></div>
+      <div class="detail-item"><label>ผู้รับบริการ</label><div class="val">${r[19]||'—'}</div></div>
+      <div class="detail-item"><label>เวลาเริ่มงาน</label><div class="val">${r[20]||'—'}</div></div>
+      <div class="detail-item"><label>เวลาเสร็จงาน</label><div class="val">${r[21]||'—'}</div></div>
+    </div>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay'))
+    document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function printModal() {
+  if (!currentRow) return;
+  const r = currentRow;
+  // เปิดหน้าใบงานพร้อม query string แล้ว auto-fill
+  const params = new URLSearchParams({
+    no:r[1]||'', date:r[2]||'', customer:r[3]||'', contact:r[4]||'',
+    address:r[5]||'', tel:r[6]||'', machine:r[7]||'', qty:r[8]||'',
+    insdate:r[9]||'', serial:r[10]||'', visits:r[11]||'', visit_other:r[12]||'',
+    trouble:r[13]||'', cause:r[14]||'', remark:r[15]||'',
+    charge:r[16]||'', rating:r[17]||'', techsign:r[18]||'',
+    cussign:r[19]||'', arrival:r[20]||'', jobdone:r[21]||'', autoprint:'1'
+  });
+  window.open('index.html?'+params.toString(), '_blank');
+}
+
+function exportCSV() {
+  if (!filtered.length) { alert('ไม่มีข้อมูลที่จะ export'); return; }
+  const headers = ['บันทึกเมื่อ','เลขที่','วันที่','ลูกค้า','ผู้ติดต่อ','ที่อยู่','โทรศัพท์','เครื่อง/รุ่น','จำนวน','วันติดตั้ง','Serial No.','ประเภทบริการ','อื่นๆ','อาการเสีย','สาเหตุ/แก้ไข','หมายเหตุ','ค่าบริการ','ความพึงพอใจ','ช่าง','ลูกค้า(ลงชื่อ)','เวลาเริ่ม','เวลาเสร็จ'];
+  const csv = [headers, ...filtered].map(r => r.map(c=>`"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `OGA_ServiceReport_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ===== AUTH GUARD — same logic as showStatsPage() / verifyStats() in index.html =====
+const AUTH_KEY = 'oga_auth_session';
+const USERS_KEY = 'oga_users';
+
+function hashPass(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash |= 0;
+  }
+  return 'h' + Math.abs(hash).toString(36) + str.length.toString(36);
+}
+
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem(AUTH_KEY) || 'null'); } catch(e) { return null; }
+}
+
+function getUsers() {
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || 'null'); } catch(e) { return null; }
+}
+
+function verifyHistLock() {
+  const p = document.getElementById('histLockPass').value;
+  const errEl = document.getElementById('histLockErr');
+  errEl.textContent = '';
+  if (!p) { errEl.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
+  const users = getUsers();
+  // ตรวจรหัสผ่านของ Admin (username = 'Admin') เหมือน verifyStats() ใน index.html
+  const admin = users && users.find(x => x.role === 'admin' && x.username === 'Admin');
+  if (admin && hashPass(p) === admin.passHash) {
+    document.getElementById('histLockOverlay').classList.remove('show');
+    document.getElementById('histLockPass').value = '';
+    loadData();
+  } else {
+    errEl.textContent = '❌ รหัสผ่านไม่ถูกต้อง';
+    document.getElementById('histLockPass').select();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const sess = getSession();
+  // Admin ที่ Login อยู่แล้วใน index.html → เข้าได้เลย
+  if (sess && sess.role === 'admin') {
+    document.getElementById('histLockOverlay').classList.remove('show');
+    loadData();
+  } else {
+    // คนอื่น (User ทั่วไป หรือยังไม่ Login) → ต้องกรอกรหัสผ่าน Admin
+    document.getElementById('histLockOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('histLockPass').focus(), 300);
+  }
+});
+</script>
+</body>
+</html>
