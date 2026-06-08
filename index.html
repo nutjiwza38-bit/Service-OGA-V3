@@ -2558,15 +2558,21 @@ async function shLoadData() {
   document.getElementById('shTableBody').innerHTML = '<div style="text-align:center;padding:60px;color:var(--muted);font-size:15px;"><div style="width:36px;height:36px;border:3px solid #e0e0e0;border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px;"></div>กำลังโหลดข้อมูล...</div>';
   document.getElementById('shPagination').style.display = 'none';
   try {
-    const token = await shGetAccessToken();
-    const resp = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Sheet1`,{headers:{Authorization:'Bearer '+token}});
-    const data = await resp.json();
-    const rows = data.values || [];
-    // เก็บ index จริงใน Sheet ไว้ใน _origRowIndex (เริ่มต้นที่ 2 เพราะแถวแรกเป็น header)
-    shAllData = rows.slice(1)
-      .map((r, i) => { const row = [...r]; row._origRowIndex = i + 2; return row; })
-      .filter(r => r && r.length > 1)
-      .reverse();
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getHistory' })
+    });
+    const result = await resp.json();
+    if (result.error) throw new Error(result.error);
+    const records = result.records || [];
+    // แปลง object เป็น array ตาม SERVICE_HEADERS order
+    const headers = ['บันทึกเมื่อ','เลขที่','วันที่','ลูกค้า','ผู้ติดต่อ','ที่อยู่','โทรศัพท์','เครื่อง/รุ่น','จำนวน','วันติดตั้ง','Serial No.','ประเภทบริการ','อื่นๆ','อาการเสีย','สาเหตุ/แก้ไข','หมายเหตุ','ค่าบริการ','ความพึงพอใจ','ช่าง','ผู้รับบริการ','เวลาเริ่ม','เวลาเสร็จ'];
+    shAllData = records.map((obj, i) => {
+      const row = headers.map(h => obj[h] || '');
+      row._origRowIndex = i + 2;
+      return row;
+    }).reverse();
     document.getElementById('shSumTotal').textContent = shAllData.length;
     shApplyFilter();
   } catch(e) {
