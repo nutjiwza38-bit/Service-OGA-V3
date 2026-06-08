@@ -3036,7 +3036,9 @@ async function doLogin() {
     // ดึง users จาก Sheets ก่อนเสมอ
     let users = await fetchUsersFromSheet();
 
-    // ถ้าดึงไม่ได้เลย (ครั้งแรก ยังไม่มี cache) ให้สร้าง Admin เริ่มต้น
+    // ถ้า fetch Sheet ล้มเหลว → ใช้ cache ที่มีอยู่ก่อน (ห้ามสร้าง Admin ใหม่ทับ)
+    if (!users) users = getCachedUsers();
+    // สร้าง Admin เริ่มต้นเฉพาะกรณีที่ไม่มีข้อมูลเลยจริงๆ (ระบบใหม่ครั้งแรก)
     if (!users || users.length === 0) {
       users = [
         { username: 'Admin', display: 'ผู้ดูแลระบบ', passHash: hashPass('9BXvuf33###'), role: 'admin', active: true }
@@ -3044,7 +3046,7 @@ async function doLogin() {
       await pushUsersToSheet(users);
     }
 
-    const found = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.passHash === hashPass(p));
+    const found = users.find(x => String(x.username).toLowerCase() === u.toLowerCase() && x.passHash === hashPass(p));
     if (!found) { err.textContent = '❌ ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'; return; }
     if (!found.active) { err.textContent = '⛔ บัญชีนี้ถูกระงับการใช้งาน'; return; }
 
@@ -3132,7 +3134,7 @@ function renderUserList() {
     const statusBadge = u.active
       ? ''
       : '<span class="um-badge-disabled">ระงับ</span>';
-    const isMainAdmin = u.username === 'Admin';
+    const isMainAdmin = String(u.username) === 'Admin';
     const toggleBtn = isMainAdmin ? '' :
       `<button onclick="toggleUser(${i})" style="padding:5px 12px;border-radius:6px;border:1px solid ${u.active ? '#fcc' : '#c8e6c9'};background:${u.active ? '#fee' : '#e8f5e9'};color:${u.active ? '#c00' : '#2e7d32'};font-family:inherit;font-size:12px;cursor:pointer;">
         ${u.active ? '⛔ ระงับ' : '✅ เปิด'}
@@ -3152,21 +3154,46 @@ function renderUserList() {
   }).join('');
 }
 
+async function callSheetAPI(body) {
+  const resp = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  });
+  return resp.json();
+}
+
 async function toggleUser(i) {
   const users = getCachedUsers() || [];
-  if (users[i].username === 'Admin') { alert('ไม่สามารถระงับ Admin หลักได้'); return; }
-  users[i].active = !users[i].active;
-  await pushUsersToSheet(users);
-  renderUserList();
+  const u = users[i];
+  if (!u) return;
+  if (String(u.username) === 'Admin') { alert('ไม่สามารถระงับ Admin หลักได้'); return; }
+  try {
+    const result = await callSheetAPI({ action: 'toggleUser', username: u.username });
+    if (result.error) { alert('\u274c ' + result.error); return; }
+    users[i].active = result.active;
+    localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(users));
+    renderUserList();
+  } catch(e) {
+    alert('\u274c เชื่อมต่อ Server ไม่ได้: ' + e.message);
+  }
 }
 
 async function deleteUser(i) {
   const users = getCachedUsers() || [];
-  if (users[i].username === 'Admin') { alert('ไม่สามารถลบ Admin หลักได้'); return; }
-  if (!confirm('ลบผู้ใช้ "' + (users[i].display || users[i].username) + '" ?')) return;
-  users.splice(i, 1);
-  await pushUsersToSheet(users);
-  renderUserList();
+  const u = users[i];
+  if (!u) return;
+  if (String(u.username) === 'Admin') { alert('ไม่สามารถลบ Admin หลักได้'); return; }
+  if (!confirm('ลบผู้ใช้ "' + (u.display || u.username) + '" ?')) return;
+  try {
+    const result = await callSheetAPI({ action: 'deleteUser', username: u.username });
+    if (result.error) { alert('\u274c ' + result.error); return; }
+    users.splice(i, 1);
+    localStorage.setItem(USERS_CACHE_KEY, JSON.stringify(users));
+    renderUserList();
+  } catch(e) {
+    alert('\u274c เชื่อมต่อ Server ไม่ได้: ' + e.message);
+  }
 }
 
 async function addUser() {
@@ -3179,28 +3206,42 @@ async function addUser() {
   errEl.textContent = '';
   if (!username || !pass) { errEl.textContent = 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'; return; }
   if (pass.length < 4) { errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'; return; }
-  const users = getCachedUsers() || [];
-  if (users.find(x => x.username.toLowerCase() === username.toLowerCase())) {
-    errEl.textContent = 'ชื่อผู้ใช้นี้มีอยู่แล้ว'; return;
+
+  errEl.style.color = '#1565c0';
+  errEl.textContent = '\u23f3 กำลังบันทึก...';
+
+  try {
+    const result = await callSheetAPI({
+      action: 'addUser',
+      user: { username, display: display || username, passHash: hashPass(pass), role }
+    });
+    if (result.error) {
+      errEl.style.color = '#c62828';
+      errEl.textContent = '\u274c ' + result.error;
+      return;
+    }
+    await fetchUsersFromSheet();
+    document.getElementById('umNewUser').value = '';
+    document.getElementById('umNewPass').value = '';
+    document.getElementById('umNewDisplay').value = '';
+    document.getElementById('umNewRole').value = 'user';
+    renderUserList();
+    errEl.style.color = '#2e7d32';
+    errEl.textContent = '\u2705 เพิ่มผู้ใช้สำเร็จ';
+    setTimeout(() => { errEl.textContent = ''; errEl.style.color = '#c62828'; }, 2500);
+  } catch(e) {
+    errEl.style.color = '#c62828';
+    errEl.textContent = '\u274c เชื่อมต่อ Server ไม่ได้: ' + e.message;
   }
-  users.push({ username, display: display || username, passHash: hashPass(pass), role, active: true });
-  await pushUsersToSheet(users);
-  document.getElementById('umNewUser').value = '';
-  document.getElementById('umNewPass').value = '';
-  document.getElementById('umNewDisplay').value = '';
-  document.getElementById('umNewRole').value = 'user';
-  renderUserList();
-  errEl.style.color = '#2e7d32';
-  errEl.textContent = '✅ เพิ่มผู้ใช้สำเร็จ';
-  setTimeout(() => { errEl.textContent = ''; errEl.style.color = '#c62828'; }, 2500);
 }
+
 
 // ===== INIT ON LOAD =====
 document.addEventListener('DOMContentLoaded', async function() {
   // โหลด users จาก Sheets มา cache ไว้ก่อน (background)
   fetchUsersFromSheet().then(users => {
-    if (!users || users.length === 0) {
-      // สร้าง Admin เริ่มต้นถ้ายังไม่มีเลย
+    // สร้าง Admin เริ่มต้นเฉพาะกรณีที่ Sheet ยืนยันว่าว่างจริง (ไม่ใช่ fetch error)
+    if (users !== null && users.length === 0) {
       const defaultUsers = [
         { username: 'Admin', display: 'ผู้ดูแลระบบ', passHash: hashPass('9BXvuf33###'), role: 'admin', active: true }
       ];
